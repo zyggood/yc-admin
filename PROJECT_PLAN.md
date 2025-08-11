@@ -56,7 +56,7 @@ com.yc.admin/
   ```
 
 #### 1.2 公共模块开发
-- [ ] 创建统一返回结果类 Result<T>
+- [x] 创建统一返回结果类 Result<T>
   ```
   AI提示词: 在com.yc.admin.common.core包下创建Result<T>泛型类，包含code、message、data字段。提供success()、error()静态方法。实现序列化接口，添加构造方法和getter/setter。
   ```
