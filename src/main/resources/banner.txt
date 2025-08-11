@@ -1,0 +1,11 @@
+___       __          _          _____ __             __           __
+  / _ |  ___/ /_ _  ___ (_)__      / __/ // /_  __ ___  / /_  __ __ / /
+ / __ | / _  /  ' \/ _ `/ / _ \    _\ \/ _  / / // / _ \/ __/ / // // / 
+/_/ |_| \_,_/_/_/_/\_,_/_/_//_/   /___/_//_/  \_, /\___/\__/  \_, //_/  
+                                            /___/             /___/     
+
+Spring Modulith 后台管理系统
+应用版本: ${application.version:1.0.0}
+Spring Boot 版本: ${spring-boot.version}
+启动时间: ${application.formatted-date}
+访问地址: http://localhost:${server.port:8080}
