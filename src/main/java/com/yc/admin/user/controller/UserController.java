@@ -3,6 +3,11 @@ package com.yc.admin.user.controller;
 import com.yc.admin.common.core.Result;
 import com.yc.admin.system.entity.User;
 import com.yc.admin.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Tag(name = "用户管理", description = "用户管理相关接口")
 public class UserController {
 
     private final UserService userService;
@@ -43,14 +49,20 @@ public class UserController {
      * @param status   用户状态
      * @return 用户分页列表
      */
+    @Operation(summary = "分页查询用户列表", description = "根据条件分页查询用户信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "400", description = "参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping
     public ResponseEntity<Result<Page<User>>> getUserList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String userName,
-            @RequestParam(required = false) String nickName,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String status) {
+            @Parameter(description = "页码（从0开始）") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "用户名关键字") @RequestParam(required = false) String userName,
+            @Parameter(description = "昵称关键字") @RequestParam(required = false) String nickName,
+            @Parameter(description = "手机号关键字") @RequestParam(required = false) String phone,
+            @Parameter(description = "用户状态") @RequestParam(required = false) String status) {
 
         log.info("查询用户列表 - 页码: {}, 大小: {}, 用户名: {}, 昵称: {}, 手机号: {}, 状态: {}",
                 page, size, userName, nickName, phone, status);
@@ -75,8 +87,10 @@ public class UserController {
      * @param userId 用户ID
      * @return 用户详情
      */
+    @Operation(summary = "查询用户详情", description = "根据用户ID查询用户详细信息")
     @GetMapping("/{userId}")
-    public ResponseEntity<Result<User>> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<Result<User>> getUserById(
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         log.info("查询用户详情 - ID: {}", userId);
 
         return userService.findById(userId)
