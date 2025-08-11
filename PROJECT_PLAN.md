@@ -60,7 +60,7 @@ com.yc.admin/
   ```
   AI提示词: 在com.yc.admin.common.core包下创建Result<T>泛型类，包含code、message、data字段。提供success()、error()静态方法。实现序列化接口，添加构造方法和getter/setter。
   ```
-- [ ] 创建全局异常处理器
+- [x] 创建全局异常处理器
   ```
   AI提示词: 创建GlobalExceptionHandler类，使用@ControllerAdvice注解。处理业务异常、参数校验异常、系统异常。返回统一的Result格式，记录异常日志。
   ```
