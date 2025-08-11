@@ -1,7 +1,7 @@
 package com.yc.admin.user.controller;
 
 import com.yc.admin.common.core.Result;
-import com.yc.admin.system.entity.User;
+import com.yc.admin.user.entity.User;
 import com.yc.admin.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

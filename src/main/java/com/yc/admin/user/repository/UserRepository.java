@@ -1,6 +1,6 @@
 package com.yc.admin.user.repository;
 
-import com.yc.admin.system.entity.User;
+import com.yc.admin.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package com.yc.admin.system.entity;
+package com.yc.admin.user.entity;
 
 import com.yc.admin.common.entity.BaseEntity;
 import jakarta.persistence.*;

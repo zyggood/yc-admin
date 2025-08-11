@@ -1,7 +1,7 @@
 package com.yc.admin.user.service;
 
 import com.yc.admin.common.exception.BusinessException;
-import com.yc.admin.system.entity.User;
+import com.yc.admin.user.entity.User;
 import com.yc.admin.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
