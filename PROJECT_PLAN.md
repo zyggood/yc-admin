@@ -64,7 +64,7 @@ com.yc.admin/
   ```
   AI提示词: 创建GlobalExceptionHandler类，使用@ControllerAdvice注解。处理业务异常、参数校验异常、系统异常。返回统一的Result格式，记录异常日志。
   ```
-- [ ] 创建基础实体类 BaseEntity
+- [x] 创建基础实体类 BaseEntity
   ```
   AI提示词: 创建BaseEntity抽象类，包含id、createTime、updateTime、createBy、updateBy、delFlag字段。使用JPA注解@MappedSuperclass，添加Lombok注解。配置自动填充策略。
   ```
@@ -82,7 +82,7 @@ com.yc.admin/
   ```
 
 #### 1.3 数据库设计
-- [ ] 设计用户表 (sys_user)
+- [x] 设计用户表 (sys_user)
   ```
   AI提示词: 创建sys_user表，包含user_id(主键)、user_name、nick_name、email、phone、sex、avatar、password、status、del_flag、create_by、create_time、update_by、update_time、remark字段。设置合适的索引和约束。
   ```
