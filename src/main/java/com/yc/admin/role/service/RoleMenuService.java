@@ -2,6 +2,7 @@ package com.yc.admin.role.service;
 
 import com.yc.admin.role.entity.RoleMenu;
 import com.yc.admin.role.repository.RoleMenuRepository;
+import com.yc.admin.common.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class RoleMenuService {
 
     private final RoleMenuRepository roleMenuRepository;
+    private final PermissionService permissionService;
 
     /**
      * 根据角色ID查询菜单ID列表
@@ -59,10 +61,7 @@ public class RoleMenuService {
      * @return 菜单ID列表
      */
     public List<Long> getMenuIdsByUserId(Long userId) {
-        if (userId == null) {
-            return List.of();
-        }
-        return roleMenuRepository.findMenuIdsByUserId(userId);
+        return permissionService.getMenuIdsByUserId(userId);
     }
 
     /**
@@ -72,10 +71,7 @@ public class RoleMenuService {
      * @return 菜单ID列表
      */
     public List<Long> getMenuIdsByPermission(String permission) {
-        if (permission == null || permission.trim().isEmpty()) {
-            return List.of();
-        }
-        return roleMenuRepository.findMenuIdsByPermission(permission.trim());
+        return permissionService.getMenuIdsByPermission(permission);
     }
 
     /**
@@ -346,11 +342,7 @@ public class RoleMenuService {
      * @return 是否有权限
      */
     public boolean hasMenuPermission(Long userId, Long menuId) {
-        if (userId == null || menuId == null) {
-            return false;
-        }
-        List<Long> userMenuIds = getMenuIdsByUserId(userId);
-        return userMenuIds.contains(menuId);
+        return permissionService.hasMenuPermission(userId, menuId);
     }
 
     /**
@@ -361,11 +353,6 @@ public class RoleMenuService {
      * @return 是否有权限
      */
     public boolean hasPermission(Long userId, String permission) {
-        if (userId == null || permission == null || permission.trim().isEmpty()) {
-            return false;
-        }
-        List<Long> userMenuIds = getMenuIdsByUserId(userId);
-        List<Long> permissionMenuIds = getMenuIdsByPermission(permission.trim());
-        return userMenuIds.stream().anyMatch(permissionMenuIds::contains);
+        return permissionService.hasPermission(userId, permission);
     }
 }

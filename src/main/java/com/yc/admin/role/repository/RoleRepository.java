@@ -141,4 +141,29 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
      */
     @Query("SELECT COUNT(r) > 0 FROM Role r WHERE r.roleName = :roleName AND r.id != :id AND r.delFlag = :delFlag")
     boolean existsByRoleNameAndIdNotAndDelFlag(@Param("roleName") String roleName, @Param("id") Long id, @Param("delFlag") Integer delFlag);
+
+    /**
+     * 根据角色ID列表查询角色列表（未删除）
+     * @param roleIds 角色ID列表
+     * @param delFlag 删除标志
+     * @return 角色列表
+     */
+    List<Role> findByIdInAndDelFlag(List<Long> roleIds, Integer delFlag);
+
+    /**
+     * 统计未删除的角色数量
+     * @param delFlag 删除标志
+     * @return 角色数量
+     */
+    long countByDelFlag(Integer delFlag);
+
+    /**
+     * 根据角色权限字符串查询菜单ID列表
+     * @param roleKeys 角色权限字符串列表
+     * @return 菜单ID列表
+     */
+    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
+           "INNER JOIN Role r ON rm.roleId = r.id " +
+           "WHERE r.roleKey IN :roleKeys AND r.status = '0' AND r.delFlag = 0")
+    List<Long> findMenuIdsByRoleKeys(@Param("roleKeys") List<String> roleKeys);
 }

@@ -139,45 +139,7 @@ public interface RoleMenuRepository extends JpaRepository<RoleMenu, Long> {
     @Query("SELECT DISTINCT rm.roleId FROM RoleMenu rm WHERE rm.menuId IN :menuIds")
     List<Long> findDistinctRoleIdsByMenuIdIn(@Param("menuIds") List<Long> menuIds);
 
-    /**
-     * 根据用户ID查询菜单ID列表（通过用户角色关联）
-     * @param userId 用户ID
-     * @return 菜单ID列表
-     */
-    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
-           "INNER JOIN UserRole ur ON rm.roleId = ur.roleId " +
-           "WHERE ur.userId = :userId")
-    List<Long> findMenuIdsByUserId(@Param("userId") Long userId);
 
-    /**
-     * 根据用户ID列表查询菜单ID列表（通过用户角色关联）
-     * @param userIds 用户ID列表
-     * @return 菜单ID列表
-     */
-    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
-           "INNER JOIN UserRole ur ON rm.roleId = ur.roleId " +
-           "WHERE ur.userId IN :userIds")
-    List<Long> findMenuIdsByUserIdIn(@Param("userIds") List<Long> userIds);
-
-    /**
-     * 根据角色权限字符串查询菜单ID列表
-     * @param roleKeys 角色权限字符串列表
-     * @return 菜单ID列表
-     */
-    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
-           "INNER JOIN Role r ON rm.roleId = r.id " +
-           "WHERE r.roleKey IN :roleKeys AND r.status = '0'")
-    List<Long> findMenuIdsByRoleKeys(@Param("roleKeys") List<String> roleKeys);
-
-    /**
-     * 根据权限标识查询菜单ID列表
-     * @param permission 权限标识
-     * @return 菜单ID列表
-     */
-    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
-           "INNER JOIN Menu m ON rm.menuId = m.id " +
-           "WHERE m.perms = :permission AND m.status = '0'")
-    List<Long> findMenuIdsByPermission(@Param("permission") String permission);
 
     // ==================== 删除方法 ====================
 

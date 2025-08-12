@@ -193,6 +193,26 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     int deleteByRoleIdIn(@Param("roleIds") List<Long> roleIds);
 
     /**
+     * 根据用户ID查询菜单ID列表（通过用户角色关联）
+     * @param userId 用户ID
+     * @return 菜单ID列表
+     */
+    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
+           "INNER JOIN UserRole ur ON rm.roleId = ur.roleId " +
+           "WHERE ur.userId = :userId")
+    List<Long> findMenuIdsByUserId(@Param("userId") Long userId);
+
+    /**
+     * 根据用户ID列表查询菜单ID列表（通过用户角色关联）
+     * @param userIds 用户ID列表
+     * @return 菜单ID列表
+     */
+    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
+           "INNER JOIN UserRole ur ON rm.roleId = ur.roleId " +
+           "WHERE ur.userId IN :userIds")
+    List<Long> findMenuIdsByUserIdIn(@Param("userIds") List<Long> userIds);
+
+    /**
      * 根据用户ID和角色ID列表删除用户角色关联
      * @param userId 用户ID
      * @param roleIds 角色ID列表

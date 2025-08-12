@@ -217,4 +217,12 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
      */
     @Query("SELECT COALESCE(MAX(m.orderNum), 0) FROM Menu m WHERE m.parentId = :parentId AND m.delFlag = :delFlag")
     Integer findMaxOrderNumByParentId(@Param("parentId") Long parentId, @Param("delFlag") Integer delFlag);
+
+    /**
+     * 根据权限标识查询菜单ID列表
+     * @param perms 权限标识
+     * @return 菜单ID列表
+     */
+    @Query("SELECT m.id FROM Menu m WHERE m.perms = :perms AND m.status = 0 AND m.delFlag = 0")
+    List<Long> findMenuIdsByPermission(@Param("perms") String perms);
 }
