@@ -25,7 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleService roleService;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         log.info("开始初始化系统数据...");
         
         // 初始化系统角色

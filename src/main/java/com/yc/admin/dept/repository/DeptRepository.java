@@ -2,6 +2,7 @@ package com.yc.admin.dept.repository;
 
 import com.yc.admin.dept.entity.Dept;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -105,6 +106,7 @@ public interface DeptRepository extends JpaRepository<Dept, Long> {
      * @param deptId 部门ID
      * @param status 新状态
      */
+    @Modifying
     @Query("UPDATE Dept d SET d.status = :status WHERE d.id = :deptId")
     void updateStatusById(@Param("deptId") Long deptId, @Param("status") String status);
 
@@ -113,6 +115,7 @@ public interface DeptRepository extends JpaRepository<Dept, Long> {
      * @param oldAncestors 旧的祖级列表
      * @param newAncestors 新的祖级列表
      */
+    @Modifying
     @Query("UPDATE Dept d SET d.ancestors = REPLACE(d.ancestors, :oldAncestors, :newAncestors) WHERE d.ancestors LIKE CONCAT(:oldAncestors, '%')")
     void updateChildrenAncestors(@Param("oldAncestors") String oldAncestors, @Param("newAncestors") String newAncestors);
 }
