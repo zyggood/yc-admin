@@ -169,6 +169,16 @@ public interface RoleMenuRepository extends JpaRepository<RoleMenu, Long> {
            "WHERE r.roleKey IN :roleKeys AND r.status = '0'")
     List<Long> findMenuIdsByRoleKeys(@Param("roleKeys") List<String> roleKeys);
 
+    /**
+     * 根据权限标识查询菜单ID列表
+     * @param permission 权限标识
+     * @return 菜单ID列表
+     */
+    @Query("SELECT DISTINCT rm.menuId FROM RoleMenu rm " +
+           "INNER JOIN Menu m ON rm.menuId = m.id " +
+           "WHERE m.perms = :permission AND m.status = '0'")
+    List<Long> findMenuIdsByPermission(@Param("permission") String permission);
+
     // ==================== 删除方法 ====================
 
     /**
@@ -221,6 +231,17 @@ public interface RoleMenuRepository extends JpaRepository<RoleMenu, Long> {
     @Transactional
     @Query("DELETE FROM RoleMenu rm WHERE rm.menuId IN :menuIds")
     int deleteByMenuIdIn(@Param("menuIds") List<Long> menuIds);
+
+    /**
+     * 根据角色ID和菜单ID列表删除角色菜单关联
+     * @param roleId 角色ID
+     * @param menuIds 菜单ID列表
+     * @return 删除的记录数
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM RoleMenu rm WHERE rm.roleId = :roleId AND rm.menuId IN :menuIds")
+    int deleteByRoleIdAndMenuIdIn(@Param("roleId") Long roleId, @Param("menuIds") List<Long> menuIds);
 
     /**
      * 批量删除角色菜单关联
