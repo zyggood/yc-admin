@@ -193,6 +193,17 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     int deleteByRoleIdIn(@Param("roleIds") List<Long> roleIds);
 
     /**
+     * 根据用户ID和角色ID列表删除用户角色关联
+     * @param userId 用户ID
+     * @param roleIds 角色ID列表
+     * @return 删除的记录数
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserRole ur WHERE ur.userId = :userId AND ur.roleId IN :roleIds")
+    int deleteByUserIdAndRoleIdIn(@Param("userId") Long userId, @Param("roleIds") List<Long> roleIds);
+
+    /**
      * 批量删除用户角色关联
      * @param userRoles 用户角色关联列表
      * @return 删除的记录数
@@ -201,4 +212,5 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     @Transactional
     @Query("DELETE FROM UserRole ur WHERE (ur.userId, ur.roleId) IN :userRoles")
     int deleteBatch(@Param("userRoles") List<Object[]> userRoles);
+
 }
