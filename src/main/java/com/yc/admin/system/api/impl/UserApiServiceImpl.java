@@ -5,15 +5,12 @@ import com.yc.admin.system.api.dto.AuthUserDTO;
 import com.yc.admin.system.api.UserApiService;
 import com.yc.admin.system.role.entity.Role;
 import com.yc.admin.system.role.service.RoleService;
-import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.user.entity.User;
 import com.yc.admin.system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 用户API服务实现类
@@ -28,21 +25,10 @@ public class UserApiServiceImpl implements UserApiService {
     
     private final UserService userService;
     private final RoleService roleService;
-    
-    @Override
-    public UserDTO findById(Long userId) {
-        return userService.findById(userId);
-    }
-    
-    @Override
-    public Optional<User> findByUsername(String username) {
-        return userService.findByUsername(username);
-    }
-
 
     @Override
-    public Optional<User> findEntityById(Long userId) {
-        return userService.findEntityById(userId);
+    public Optional<AuthUserDTO> findById(Long userId) {
+        return userService.findEntityById(userId).map(this::convertToAuthUserDTO);
     }
     
     @Override
@@ -56,14 +42,7 @@ public class UserApiServiceImpl implements UserApiService {
         return userService.findEntityById(userId)
                 .map(this::convertToAuthUserDTO);
     }
-    
-    @Override
-    public List<AuthRoleDTO> findAuthRolesByUserId(Long userId) {
-        List<Role> roles = roleService.findByUserId(userId);
-        return roles.stream()
-                .map(this::convertToAuthRoleDTO)
-                .collect(Collectors.toList());
-    }
+
     
     /**
      * 将User实体转换为AuthUserDTO
@@ -92,14 +71,5 @@ public class UserApiServiceImpl implements UserApiService {
                 .status(role.getStatus())
                 .build();
     }
-    
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return userService.findByEmail(email);
-    }
-    
-    @Override
-    public Optional<User> findByUserName(String userName) {
-        return userService.findByUsername(userName);
-    }
+
 }

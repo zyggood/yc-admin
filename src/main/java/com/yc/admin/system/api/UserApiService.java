@@ -1,11 +1,7 @@
 package com.yc.admin.system.api;
 
-import com.yc.admin.system.api.dto.AuthRoleDTO;
 import com.yc.admin.system.api.dto.AuthUserDTO;
-import com.yc.admin.system.user.dto.UserDTO;
-import com.yc.admin.system.user.entity.User;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -19,38 +15,11 @@ public interface UserApiService {
 
     /**
      * 根据ID查询用户DTO
+     *
      * @param userId 用户ID
      * @return 用户信息
      */
-    UserDTO findById(Long userId);
-
-    /**
-     * 根据用户名查询用户实体
-     * @param username 用户名
-     * @return 用户实体
-     */
-    Optional<User> findByUsername(String username);
-
-    /**
-     * 根据用户名查询用户实体
-     * @param userName 用户名
-     * @return 用户实体
-     */
-    Optional<User> findByUserName(String userName);
-
-    /**
-     * 根据邮箱查询用户
-     * @param email 邮箱
-     * @return 用户实体
-     */
-    Optional<User> findByEmail(String email);
-
-    /**
-     * 根据ID查询用户实体（内部使用）
-     * @param userId 用户ID
-     * @return 用户实体
-     */
-    Optional<User> findEntityById(Long userId);
+    Optional<AuthUserDTO> findById(Long userId);
 
     /**
      * 根据用户名查找认证用户信息
@@ -66,10 +35,4 @@ public interface UserApiService {
      */
     Optional<AuthUserDTO> findAuthUserById(Long userId);
 
-    /**
-     * 根据用户ID查询用户角色信息
-     * @param userId 用户ID
-     * @return 角色信息列表
-     */
-    List<AuthRoleDTO> findAuthRolesByUserId(Long userId);
 }

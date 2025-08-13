@@ -4,7 +4,7 @@ import com.yc.admin.auth.dto.LoginDTO;
 import com.yc.admin.auth.dto.RefreshTokenDTO;
 import com.yc.admin.auth.service.LoginService;
 import com.yc.admin.common.core.Result;
-import com.yc.admin.system.user.dto.UserDTO;
+import com.yc.admin.system.api.dto.AuthUserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,16 +30,12 @@ public class AuthController {
     /**
      * 用户登录
      * @param loginDTO 登录信息
-     * @param request 请求对象
-     * @param response 响应对象
      * @return 登录结果
      */
     @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result<Map<String, Object>> login(
-            @Validated @RequestBody LoginDTO loginDTO,
-            HttpServletRequest request,
-            HttpServletResponse response) {
+            @Validated @RequestBody LoginDTO loginDTO) {
         Map<String, Object> result = loginService.login(loginDTO);
         return Result.success(result);
     }
@@ -47,12 +43,11 @@ public class AuthController {
     /**
      * 用户登出
      * @param request 请求对象
-     * @param response 响应对象
      * @return 登出结果
      */
     @Operation(summary = "用户登出")
     @PostMapping("/logout")
-    public Result<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+    public Result<Void> logout(HttpServletRequest request) {
         loginService.logout(request);
         return Result.success();
     }
@@ -75,8 +70,8 @@ public class AuthController {
      */
     @Operation(summary = "获取当前用户信息")
     @GetMapping("/me")
-    public Result<UserDTO> getCurrentUser() {
-        UserDTO user = loginService.getCurrentUser();
+    public Result<AuthUserDTO> getCurrentUser() {
+        AuthUserDTO user = loginService.getCurrentUser();
         return Result.success(user);
     }
 

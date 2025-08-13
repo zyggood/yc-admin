@@ -1,4 +1,4 @@
-package com.yc.admin.common.config;
+package com.yc.admin.system.init;
 
 import com.yc.admin.system.role.dto.RoleDTO;
 import com.yc.admin.system.role.service.RoleService;

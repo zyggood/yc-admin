@@ -5,7 +5,6 @@ import com.yc.admin.common.exception.BusinessException;
 import com.yc.admin.auth.dto.AuthLoginUser;
 import com.yc.admin.system.api.dto.AuthRoleDTO;
 import com.yc.admin.system.api.dto.AuthUserDTO;
-import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.api.UserApiService;
 import com.yc.admin.system.api.RoleApiService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +20,7 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 登录服务
@@ -185,10 +185,10 @@ public class LoginService {
      * 
      * @return 当前用户信息
      */
-    public UserDTO getCurrentUser() {
+    public AuthUserDTO getCurrentUser() {
         AuthLoginUser authLoginUser = getCurrentLoginUser();
         if (authLoginUser != null && authLoginUser.getUser() != null) {
-            return userApiService.findById(authLoginUser.getUser().getId());
+            return userApiService.findById(authLoginUser.getUser().getId()).orElse(null);
         }
         return null;
     }
