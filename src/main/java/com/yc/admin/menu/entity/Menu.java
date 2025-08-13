@@ -1,12 +1,12 @@
 package com.yc.admin.menu.entity;
 
 import com.yc.admin.common.entity.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 菜单权限实体类
