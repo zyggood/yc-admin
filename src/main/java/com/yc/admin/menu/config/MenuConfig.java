@@ -333,16 +333,12 @@ public class MenuConfig {
      * @return 类型名称
      */
     public static String getMenuTypeName(String menuType) {
-        switch (menuType) {
-            case MenuType.DIRECTORY:
-                return "目录";
-            case MenuType.MENU:
-                return "菜单";
-            case MenuType.BUTTON:
-                return "按钮";
-            default:
-                return "未知";
-        }
+        return switch (menuType) {
+            case MenuType.DIRECTORY -> "目录";
+            case MenuType.MENU -> "菜单";
+            case MenuType.BUTTON -> "按钮";
+            default -> "未知";
+        };
     }
 
     /**
@@ -354,14 +350,11 @@ public class MenuConfig {
         if (status == null) {
             return "未知";
         }
-        switch (status) {
-            case MenuStatus.NORMAL:
-                return "正常";
-            case MenuStatus.DISABLED:
-                return "停用";
-            default:
-                return "未知";
-        }
+        return switch (status) {
+            case MenuStatus.NORMAL -> "正常";
+            case MenuStatus.DISABLED -> "停用";
+            default -> "未知";
+        };
     }
 
     /**
@@ -373,14 +366,11 @@ public class MenuConfig {
         if (visible == null) {
             return "未知";
         }
-        switch (visible) {
-            case MenuVisible.SHOW:
-                return "显示";
-            case MenuVisible.HIDE:
-                return "隐藏";
-            default:
-                return "未知";
-        }
+        return switch (visible) {
+            case MenuVisible.SHOW -> "显示";
+            case MenuVisible.HIDE -> "隐藏";
+            default -> "未知";
+        };
     }
 
     /**

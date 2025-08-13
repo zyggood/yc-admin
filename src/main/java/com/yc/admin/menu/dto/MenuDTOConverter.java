@@ -253,17 +253,13 @@ public class MenuDTOConverter {
         if (menuType == null) {
             return "未知";
         }
-        
-        switch (menuType) {
-            case "M":
-                return "目录";
-            case "C":
-                return "菜单";
-            case "F":
-                return "按钮";
-            default:
-                return "未知";
-        }
+
+        return switch (menuType) {
+            case "M" -> "目录";
+            case "C" -> "菜单";
+            case "F" -> "按钮";
+            default -> "未知";
+        };
     }
 
     /**

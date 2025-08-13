@@ -160,15 +160,11 @@ public class User extends BaseEntity {
      * @return 性别描述
      */
     public String getSexDesc() {
-        switch (this.sex) {
-            case "0":
-                return "男";
-            case "1":
-                return "女";
-            case "2":
-            default:
-                return "未知";
-        }
+        return switch (this.sex) {
+            case "0" -> "男";
+            case "1" -> "女";
+            default -> "未知";
+        };
     }
 
     /**

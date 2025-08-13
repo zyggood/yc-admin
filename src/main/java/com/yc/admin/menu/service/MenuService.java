@@ -535,14 +535,12 @@ public class MenuService {
         String perms = null;
         String path = null;
         
-        if (menuDTO instanceof MenuDTO.CreateDTO) {
-            MenuDTO.CreateDTO createDTO = (MenuDTO.CreateDTO) menuDTO;
+        if (menuDTO instanceof MenuDTO.CreateDTO createDTO) {
             menuName = createDTO.getMenuName();
             menuType = createDTO.getMenuType();
             perms = createDTO.getPerms();
             path = createDTO.getPath();
-        } else if (menuDTO instanceof MenuDTO.UpdateDTO) {
-            MenuDTO.UpdateDTO updateDTO = (MenuDTO.UpdateDTO) menuDTO;
+        } else if (menuDTO instanceof MenuDTO.UpdateDTO updateDTO) {
             menuName = updateDTO.getMenuName();
             menuType = updateDTO.getMenuType();
             perms = updateDTO.getPerms();

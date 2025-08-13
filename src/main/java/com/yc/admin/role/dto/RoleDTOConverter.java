@@ -176,21 +176,15 @@ public class RoleDTOConverter {
         if (dataScope == null) {
             return "未知";
         }
-        
-        switch (dataScope) {
-            case "1":
-                return "全部数据权限";
-            case "2":
-                return "自定数据权限";
-            case "3":
-                return "部门数据权限";
-            case "4":
-                return "部门及以下数据权限";
-            case "5":
-                return "仅本人数据权限";
-            default:
-                return "未知";
-        }
+
+        return switch (dataScope) {
+            case "1" -> "全部数据权限";
+            case "2" -> "自定数据权限";
+            case "3" -> "部门数据权限";
+            case "4" -> "部门及以下数据权限";
+            case "5" -> "仅本人数据权限";
+            default -> "未知";
+        };
     }
 
     /**
