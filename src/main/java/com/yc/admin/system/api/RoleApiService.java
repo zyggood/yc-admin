@@ -1,5 +1,6 @@
 package com.yc.admin.system.api;
 
+import com.yc.admin.system.api.dto.AuthRoleDTO;
 import com.yc.admin.system.role.entity.Role;
 
 import java.util.List;
@@ -19,4 +20,9 @@ public interface RoleApiService {
      * @return 角色列表
      */
     List<Role> findByUserId(Long userId);
+    
+    /**
+     * 根据用户ID查找认证角色信息
+     */
+    List<AuthRoleDTO> findAuthRolesByUserId(Long userId);
 }

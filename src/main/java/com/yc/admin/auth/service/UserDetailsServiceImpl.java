@@ -1,11 +1,11 @@
 package com.yc.admin.auth.service;
 
+import com.yc.admin.auth.dto.AuthLoginUser;
+import com.yc.admin.system.api.dto.AuthRoleDTO;
+import com.yc.admin.system.api.dto.AuthUserDTO;
 import com.yc.admin.system.api.MenuApiService;
 import com.yc.admin.system.api.RoleApiService;
 import com.yc.admin.system.api.UserApiService;
-import com.yc.admin.system.role.entity.Role;
-import com.yc.admin.system.user.entity.LoginUser;
-import com.yc.admin.system.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,11 +40,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         log.debug("加载用户信息: {}", username);
         
         // 查询用户信息
-        User user = userApiService.findByUsername(username)
+        AuthUserDTO user = userApiService.findAuthUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
         
         // 检查用户状态
-        if (user.getStatus() == User.Status.DISABLED) {
+        if (user.isDisabled()) {
             throw new UsernameNotFoundException("用户已被禁用: " + username);
         }
         
@@ -55,10 +55,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     /**
      * 创建登录用户信息
      * 
-     * @param user 用户实体
+     * @param user 用户DTO
      * @return 登录用户信息
      */
-    private LoginUser createLoginUser(User user) {
+    private AuthLoginUser createLoginUser(AuthUserDTO user) {
         // 获取用户权限
         Set<String> permissions = getUserPermissions(user.getId());
         
@@ -66,10 +66,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Set<String> roles = getUserRoles(user.getId());
         
         // 创建登录用户对象
-        LoginUser loginUser = new LoginUser();
-        loginUser.setUser(user);
-        loginUser.setPermissions(permissions);
-        loginUser.setRoles(roles);
+        AuthLoginUser loginUser = AuthLoginUser.builder()
+                .user(user)
+                .permissions(permissions)
+                .roles(roles)
+                .build();
         
         log.debug("用户 {} 权限加载完成，权限数量: {}, 角色数量: {}", 
                 user.getUserName(), permissions.size(), roles.size());
@@ -113,10 +114,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         try {
             // 通过用户ID获取角色
-            List<Role> userRoleList = roleApiService.findByUserId(userId);
+            List<AuthRoleDTO> userRoleList = roleApiService.findAuthRolesByUserId(userId);
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 List<String> userRoles = userRoleList.stream()
-                    .map(Role::getRoleKey)
+                    .map(AuthRoleDTO::getRoleKey)
                     .collect(Collectors.toList());
                 roles.addAll(userRoles);
             }
@@ -136,15 +137,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * @param userId 用户ID
      * @return 登录用户信息
      */
-    public LoginUser loadUserByUserId(Long userId) {
+    public AuthLoginUser loadUserByUserId(Long userId) {
         log.debug("根据用户ID加载用户信息: {}", userId);
         
         // 查询用户信息
-        User user = userApiService.findEntityById(userId)
+        AuthUserDTO user = userApiService.findAuthUserById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + userId));
         
         // 检查用户状态
-        if (user.getStatus() == User.Status.DISABLED) {
+        if (user.isDisabled()) {
             throw new UsernameNotFoundException("用户已被禁用: " + userId);
         }
         

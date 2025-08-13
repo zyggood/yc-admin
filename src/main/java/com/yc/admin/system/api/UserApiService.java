@@ -1,8 +1,11 @@
 package com.yc.admin.system.api;
 
+import com.yc.admin.system.api.dto.AuthRoleDTO;
+import com.yc.admin.system.api.dto.AuthUserDTO;
 import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.user.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -48,4 +51,25 @@ public interface UserApiService {
      * @return 用户实体
      */
     Optional<User> findEntityById(Long userId);
+
+    /**
+     * 根据用户名查找认证用户信息
+     * @param username 用户名
+     * @return 认证用户信息
+     */
+    Optional<AuthUserDTO> findAuthUserByUsername(String username);
+
+    /**
+     * 根据用户ID查找认证用户信息
+     * @param userId 用户ID
+     * @return 认证用户信息
+     */
+    Optional<AuthUserDTO> findAuthUserById(Long userId);
+
+    /**
+     * 根据用户ID查询用户角色信息
+     * @param userId 用户ID
+     * @return 角色信息列表
+     */
+    List<AuthRoleDTO> findAuthRolesByUserId(Long userId);
 }
