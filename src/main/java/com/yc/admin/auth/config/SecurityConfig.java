@@ -1,4 +1,4 @@
-package com.yc.admin.config;
+package com.yc.admin.auth.config;
 
 import com.yc.admin.auth.handler.AuthenticationFailureHandlerImpl;
 import com.yc.admin.auth.handler.AuthenticationSuccessHandlerImpl;

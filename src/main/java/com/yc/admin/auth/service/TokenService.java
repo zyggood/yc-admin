@@ -1,6 +1,6 @@
 package com.yc.admin.auth.service;
 
-import com.yc.admin.config.JwtProperties;
+import com.yc.admin.auth.config.JwtProperties;
 import com.yc.admin.user.entity.LoginUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

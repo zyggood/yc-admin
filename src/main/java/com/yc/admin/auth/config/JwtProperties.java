@@ -1,4 +1,4 @@
-package com.yc.admin.config;
+package com.yc.admin.auth.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
