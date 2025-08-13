@@ -8,7 +8,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -33,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final CacheService cacheService;
     private final JwtProperties jwtProperties;
     
     /**
@@ -84,7 +83,7 @@ public class TokenService {
             
             if (StringUtils.hasText(uuid)) {
                 String userKey = getTokenKey(uuid);
-                return (LoginUser) redisTemplate.opsForValue().get(userKey);
+                return (LoginUser) cacheService.get(userKey);
             }
         } catch (Exception e) {
             log.warn("获取登录用户信息失败: {}", e.getMessage());
@@ -124,9 +123,9 @@ public class TokenService {
         loginUser.setLoginTime(System.currentTimeMillis());
         loginUser.setExpireTime(loginUser.getLoginTime() + jwtProperties.getExpiration());
         
-        // 更新 Redis 中的用户信息
+        // 更新缓存中的用户信息
         String userKey = getTokenKey(loginUser.getToken());
-        redisTemplate.opsForValue().set(userKey, loginUser, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
+        cacheService.set(userKey, loginUser, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -145,7 +144,7 @@ public class TokenService {
             
             if (StringUtils.hasText(uuid)) {
                 String userKey = getTokenKey(uuid);
-                redisTemplate.delete(userKey);
+                cacheService.delete(userKey);
                 log.info("令牌已删除: {}", uuid);
             }
         } catch (Exception e) {

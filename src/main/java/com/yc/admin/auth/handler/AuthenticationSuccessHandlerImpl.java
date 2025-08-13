@@ -1,7 +1,7 @@
 package com.yc.admin.auth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yc.admin.auth.service.LoginService;
+import com.yc.admin.auth.service.TokenService;
 import com.yc.admin.common.core.Result;
 import com.yc.admin.user.entity.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHandler {
 
-    private final LoginService loginService;
+    private final TokenService tokenService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -42,13 +42,13 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             
             // 生成 JWT 令牌
-            String token = loginService.createToken(loginUser);
+            String token = tokenService.createToken(loginUser);
             
             // 构建响应数据
             Map<String, Object> data = new HashMap<>();
             data.put("token", token);
             data.put("tokenType", "Bearer");
-            data.put("expiresIn", loginService.getTokenExpiration());
+            data.put("expiresIn", tokenService.getTokenExpiration());
             data.put("userInfo", buildUserInfo(loginUser));
             
             // 构建成功响应
