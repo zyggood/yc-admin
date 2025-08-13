@@ -2,6 +2,8 @@ package com.yc.admin.user.service;
 
 import com.yc.admin.common.exception.BusinessException;
 import com.yc.admin.user.entity.User;
+import com.yc.admin.user.dto.UserDTO;
+import com.yc.admin.user.dto.UserDTOConverter;
 import com.yc.admin.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,20 +31,48 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserDTOConverter userDTOConverter;
 
     // ==================== 查询操作 ====================
 
     /**
-     * 根据ID查询用户
+     * 根据ID查询用户DTO
      * @param userId 用户ID
      * @return 用户信息
      */
-    public Optional<User> findById(Long userId) {
+    public UserDTO findById(Long userId) {
+        if (userId == null) {
+            throw new BusinessException("用户ID不能为空");
+        }
+        User user = userRepository.findById(userId)
+                .filter(u -> !u.isDeleted())
+                .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
+        return userDTOConverter.toDTO(user);
+    }
+
+    /**
+     * 根据ID查询用户实体（内部使用）
+     * @param userId 用户ID
+     * @return 用户实体
+     */
+    public Optional<User> findEntityById(Long userId) {
         if (userId == null) {
             return Optional.empty();
         }
         return userRepository.findById(userId)
-                .filter(user -> !user.isDeleted());
+                .filter(u -> !u.isDeleted());
+    }
+
+    /**
+     * 根据用户名查询用户
+     * @param username 用户名
+     * @return 用户信息
+     */
+    public Optional<User> findByUsername(String username) {
+        if (!StringUtils.hasText(username)) {
+            return Optional.empty();
+        }
+        return userRepository.findByUserNameAndDelFlag(username, 0);
     }
 
     /**
@@ -86,8 +116,9 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
-    public Page<User> findAll(Pageable pageable) {
-        return userRepository.findByDelFlagOrderByCreateTimeDesc(0, pageable);
+    public Page<UserDTO> findAll(Pageable pageable) {
+        Page<User> userPage = userRepository.findByDelFlagOrderByCreateTimeDesc(0, pageable);
+        return userDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -96,11 +127,12 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
-    public Page<User> findByStatus(String status, Pageable pageable) {
+    public Page<UserDTO> findByStatus(String status, Pageable pageable) {
         if (!StringUtils.hasText(status)) {
             return findAll(pageable);
         }
-        return userRepository.findByStatusAndDelFlagOrderByCreateTimeDesc(status, 0, pageable);
+        Page<User> userPage = userRepository.findByStatusAndDelFlagOrderByCreateTimeDesc(status, 0, pageable);
+        return userDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -112,8 +144,8 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
-    public Page<User> findByConditions(String userName, String nickName, String phone, String status, Pageable pageable) {
-        return userRepository.findByConditions(
+    public Page<UserDTO> findByConditions(String userName, String nickName, String phone, String status, Pageable pageable) {
+        Page<User> userPage = userRepository.findByConditions(
                 StringUtils.hasText(userName) ? userName : null,
                 StringUtils.hasText(nickName) ? nickName : null,
                 StringUtils.hasText(phone) ? phone : null,
@@ -121,6 +153,7 @@ public class UserService {
                 0,
                 pageable
         );
+        return userDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -135,19 +168,21 @@ public class UserService {
      * 查询所有正常用户（用于导出）
      * @return 用户列表
      */
-    public List<User> findAllForExport() {
-        return userRepository.findByDelFlagOrderByCreateTimeDesc(0);
+    public List<UserDTO> findAllForExport() {
+        List<User> users = userRepository.findByDelFlagOrderByCreateTimeDesc(0);
+        return userDTOConverter.toDTOList(users);
     }
 
     // ==================== 创建操作 ====================
 
     /**
      * 创建用户
-     * @param user 用户信息
+     * @param createDTO 用户创建信息
      * @return 创建的用户
      */
     @Transactional
-    public User createUser(User user) {
+    public UserDTO createUser(UserDTO.CreateDTO createDTO) {
+        User user = userDTOConverter.toEntity(createDTO);
         log.info("开始创建用户: {}", user.getUserName());
         
         // 参数校验
@@ -187,7 +222,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
         log.info("用户创建成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
         
-        return savedUser;
+        return userDTOConverter.toDTO(savedUser);
     }
 
     // ==================== 更新操作 ====================
@@ -195,68 +230,46 @@ public class UserService {
     /**
      * 更新用户信息
      * @param userId 用户ID
-     * @param updateUser 更新的用户信息
+     * @param updateDTO 更新的用户信息
      * @return 更新后的用户
      */
     @Transactional
-    public User updateUser(Long userId, User updateUser) {
+    public UserDTO updateUser(Long userId, UserDTO.UpdateDTO updateDTO) {
         log.info("开始更新用户: {}", userId);
         
         // 查找现有用户
-        User existingUser = findById(userId)
+        User existingUser = userRepository.findById(userId)
+                .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
         
-        // 参数校验
-        validateUserForUpdate(updateUser);
-        
         // 检查用户名是否已被其他用户使用
-        if (StringUtils.hasText(updateUser.getUserName()) && 
-            !updateUser.getUserName().equals(existingUser.getUserName()) &&
-            userRepository.existsByUserNameAndIdNotAndDelFlag(updateUser.getUserName(), userId, 0)) {
-            throw new BusinessException("用户名已存在: " + updateUser.getUserName());
+        if (StringUtils.hasText(updateDTO.getUserName()) && 
+            !updateDTO.getUserName().equals(existingUser.getUserName()) &&
+            userRepository.existsByUserNameAndIdNotAndDelFlag(updateDTO.getUserName(), userId, 0)) {
+            throw new BusinessException("用户名已存在: " + updateDTO.getUserName());
         }
         
         // 检查邮箱是否已被其他用户使用
-        if (StringUtils.hasText(updateUser.getEmail()) && 
-            !updateUser.getEmail().equals(existingUser.getEmail()) &&
-            userRepository.existsByEmailAndIdNotAndDelFlag(updateUser.getEmail(), userId, 0)) {
-            throw new BusinessException("邮箱已存在: " + updateUser.getEmail());
+        if (StringUtils.hasText(updateDTO.getEmail()) && 
+            !updateDTO.getEmail().equals(existingUser.getEmail()) &&
+            userRepository.existsByEmailAndIdNotAndDelFlag(updateDTO.getEmail(), userId, 0)) {
+            throw new BusinessException("邮箱已存在: " + updateDTO.getEmail());
         }
         
         // 检查手机号是否已被其他用户使用
-        if (StringUtils.hasText(updateUser.getPhone()) && 
-            !updateUser.getPhone().equals(existingUser.getPhone()) &&
-            userRepository.existsByPhoneAndIdNotAndDelFlag(updateUser.getPhone(), userId, 0)) {
-            throw new BusinessException("手机号已存在: " + updateUser.getPhone());
+        if (StringUtils.hasText(updateDTO.getPhone()) && 
+            !updateDTO.getPhone().equals(existingUser.getPhone()) &&
+            userRepository.existsByPhoneAndIdNotAndDelFlag(updateDTO.getPhone(), userId, 0)) {
+            throw new BusinessException("手机号已存在: " + updateDTO.getPhone());
         }
         
         // 更新字段
-        if (StringUtils.hasText(updateUser.getUserName())) {
-            existingUser.setUserName(updateUser.getUserName());
-        }
-        if (StringUtils.hasText(updateUser.getNickName())) {
-            existingUser.setNickName(updateUser.getNickName());
-        }
-        if (updateUser.getEmail() != null) {
-            existingUser.setEmail(updateUser.getEmail());
-        }
-        if (updateUser.getPhone() != null) {
-            existingUser.setPhone(updateUser.getPhone());
-        }
-        if (StringUtils.hasText(updateUser.getSex())) {
-            existingUser.setSex(updateUser.getSex());
-        }
-        if (updateUser.getAvatar() != null) {
-            existingUser.setAvatar(updateUser.getAvatar());
-        }
-        if (updateUser.getRemark() != null) {
-            existingUser.setRemark(updateUser.getRemark());
-        }
+        userDTOConverter.updateEntity(existingUser, updateDTO);
         
         User savedUser = userRepository.save(existingUser);
-        log.info("用户更新成功: {}", savedUser.getUserName());
+        log.info("用户更新成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
         
-        return savedUser;
+        return userDTOConverter.toDTO(savedUser);
     }
 
     /**
@@ -266,22 +279,55 @@ public class UserService {
      * @return 更新后的用户
      */
     @Transactional
-    public User updateUserStatus(Long userId, String status) {
+    public UserDTO updateUserStatus(Long userId, String status) {
         log.info("开始更新用户状态: {}, 新状态: {}", userId, status);
         
-        User user = findById(userId)
+        User existingUser = userRepository.findById(userId)
+                .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
         
-        if (!User.Status.NORMAL.equals(status) && !User.Status.DISABLED.equals(status)) {
-            throw new BusinessException("无效的用户状态: " + status);
-        }
+        existingUser.setStatus(status);
+        User savedUser = userRepository.save(existingUser);
         
-        user.setStatus(status);
-        User savedUser = userRepository.save(user);
-        
-        log.info("用户状态更新成功: {}, 状态: {}", savedUser.getUserName(), savedUser.getStatusDesc());
-        return savedUser;
+        log.info("用户状态更新成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
+        return userDTOConverter.toDTO(savedUser);
     }
+
+    // ==================== 内部方法 ====================
+    
+    private void validateUserForCreate(User user) {
+        if (user == null) {
+            throw new BusinessException("用户信息不能为空");
+        }
+        if (!StringUtils.hasText(user.getUserName())) {
+            throw new BusinessException("用户名不能为空");
+        }
+        if (!StringUtils.hasText(user.getPassword())) {
+            throw new BusinessException("密码不能为空");
+        }
+        if (user.getUserName().length() < 2 || user.getUserName().length() > 30) {
+            throw new BusinessException("用户名长度必须在2-30个字符之间");
+        }
+        if (user.getPassword().length() < 6 || user.getPassword().length() > 20) {
+            throw new BusinessException("密码长度必须在6-20个字符之间");
+        }
+        if (StringUtils.hasText(user.getEmail()) && !isValidEmail(user.getEmail())) {
+            throw new BusinessException("邮箱格式不正确");
+        }
+        if (StringUtils.hasText(user.getPhone()) && !isValidPhone(user.getPhone())) {
+            throw new BusinessException("手机号格式不正确");
+        }
+    }
+    
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+    
+    private boolean isValidPhone(String phone) {
+        return phone.matches("^1[3-9]\\d{9}$");
+    }
+
+
 
     /**
      * 批量更新用户状态
@@ -326,7 +372,7 @@ public class UserService {
         }
         
         // 检查用户是否存在
-        findById(userId).orElseThrow(() -> new BusinessException("用户不存在: " + userId));
+        findEntityById(userId).orElseThrow(() -> new BusinessException("用户不存在: " + userId));
         
         // 加密新密码
         String encodedPassword = passwordEncoder.encode(newPassword);
@@ -347,7 +393,7 @@ public class UserService {
     public void deleteUser(Long userId) {
         log.info("开始删除用户: {}", userId);
         
-        User user = findById(userId)
+        User user = findEntityById(userId)
                 .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
         
         user.markDeleted();
@@ -376,32 +422,6 @@ public class UserService {
     }
 
     // ==================== 业务校验方法 ====================
-
-    /**
-     * 校验用户创建参数
-     * @param user 用户信息
-     */
-    private void validateUserForCreate(User user) {
-        if (user == null) {
-            throw new BusinessException("用户信息不能为空");
-        }
-        
-        if (!StringUtils.hasText(user.getUserName())) {
-            throw new BusinessException("用户名不能为空");
-        }
-        
-        if (!StringUtils.hasText(user.getNickName())) {
-            throw new BusinessException("用户昵称不能为空");
-        }
-        
-        if (!StringUtils.hasText(user.getPassword())) {
-            throw new BusinessException("密码不能为空");
-        }
-        
-        if (user.getPassword().length() < 6) {
-            throw new BusinessException("密码长度不能少于6位");
-        }
-    }
 
     /**
      * 校验用户更新参数

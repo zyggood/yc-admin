@@ -1,7 +1,10 @@
 package com.yc.admin.role.service;
 
 import com.yc.admin.role.entity.Role;
+import com.yc.admin.role.dto.RoleDTO;
+import com.yc.admin.role.dto.RoleDTOConverter;
 import com.yc.admin.role.repository.RoleRepository;
+import com.yc.admin.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,9 +27,11 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final RoleDTOConverter roleDTOConverter;
 
     // ==================== 查询方法 ====================
 
@@ -35,11 +40,26 @@ public class RoleService {
      * @param id 角色ID
      * @return 角色信息
      */
-    public Optional<Role> findById(Long id) {
+    public RoleDTO findById(Long id) {
         if (id == null) {
-            return Optional.empty();
+            throw new BusinessException("角色ID不能为空");
         }
-        return roleRepository.findById(id).filter(role -> role.getDelFlag() == 0);
+        Role role = roleRepository.findById(id)
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + id));
+        return roleDTOConverter.toDTO(role);
+    }
+
+    /**
+     * 根据用户ID查询角色
+     * @param userId 用户ID
+     * @return 角色列表
+     */
+    public List<Role> findByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return roleRepository.findByUserId(userId);
     }
 
     /**
@@ -47,11 +67,12 @@ public class RoleService {
      * @param roleKey 角色权限字符串
      * @return 角色信息
      */
-    public Optional<Role> findByRoleKey(String roleKey) {
+    public Optional<RoleDTO> findByRoleKey(String roleKey) {
         if (!StringUtils.hasText(roleKey)) {
             return Optional.empty();
         }
-        return roleRepository.findByRoleKeyAndDelFlag(roleKey, 0);
+        return roleRepository.findByRoleKeyAndDelFlag(roleKey, 0)
+                .map(roleDTOConverter::toDTO);
     }
 
     /**
@@ -59,19 +80,21 @@ public class RoleService {
      * @param roleName 角色名称
      * @return 角色信息
      */
-    public Optional<Role> findByRoleName(String roleName) {
+    public Optional<RoleDTO> findByRoleName(String roleName) {
         if (!StringUtils.hasText(roleName)) {
             return Optional.empty();
         }
-        return roleRepository.findByRoleNameAndDelFlag(roleName, 0);
+        return roleRepository.findByRoleNameAndDelFlag(roleName, 0)
+                .map(roleDTOConverter::toDTO);
     }
 
     /**
      * 查询所有角色
      * @return 角色列表
      */
-    public List<Role> findAll() {
-        return roleRepository.findByDelFlagOrderByRoleSortAsc(0);
+    public List<RoleDTO> findAll() {
+        List<Role> roles = roleRepository.findByDelFlagOrderByRoleSortAsc(0);
+        return roleDTOConverter.toDTOList(roles);
     }
 
     /**
@@ -79,11 +102,14 @@ public class RoleService {
      * @param status 角色状态
      * @return 角色列表
      */
-    public List<Role> findByStatus(String status) {
+    public List<RoleDTO> findByStatus(String status) {
+        List<Role> roles;
         if (!StringUtils.hasText(status)) {
-            return findAll();
+            roles = roleRepository.findByDelFlagOrderByRoleSortAsc(0);
+        } else {
+            roles = roleRepository.findAllForSelect(status, 0);
         }
-        return roleRepository.findAllForSelect(status, 0);
+        return roleDTOConverter.toDTOList(roles);
     }
 
     /**
@@ -92,9 +118,10 @@ public class RoleService {
      * @param size 每页大小
      * @return 角色分页列表
      */
-    public Page<Role> findAll(int page, int size) {
+    public Page<RoleDTO> findAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable);
+        Page<Role> rolePage = roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable);
+        return roleDTOConverter.toDTOPage(rolePage);
     }
 
     /**
@@ -106,15 +133,16 @@ public class RoleService {
      * @param size 每页大小
      * @return 角色分页列表
      */
-    public Page<Role> findByConditions(String roleName, String roleKey, String status, int page, int size) {
+    public Page<RoleDTO> findByConditions(String roleName, String roleKey, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return roleRepository.findByConditions(
+        Page<Role> rolePage = roleRepository.findByConditions(
             StringUtils.hasText(roleName) ? roleName.trim() : null,
             StringUtils.hasText(roleKey) ? roleKey.trim() : null,
             StringUtils.hasText(status) ? status : null,
             0,
             pageable
         );
+        return roleDTOConverter.toDTOPage(rolePage);
     }
 
     /**
@@ -129,33 +157,37 @@ public class RoleService {
      * 查询所有正常状态的角色（用于下拉选择）
      * @return 角色列表
      */
-    public List<Role> findAllForSelect() {
-        return roleRepository.findAllForSelect(Role.Status.NORMAL, 0);
+    public List<RoleDTO.SelectorDTO> findAllForSelect() {
+        List<Role> roles = roleRepository.findAllForSelect(Role.Status.NORMAL, 0);
+        return roleDTOConverter.toSelectorDTOList(roles);
     }
 
     // ==================== 创建和更新方法 ====================
 
     /**
      * 创建角色
-     * @param role 角色信息
+     * @param createDTO 角色创建信息
      * @return 创建的角色
      */
     @Transactional
-    public Role createRole(Role role) {
-        log.info("开始创建角色: {}", role.getRoleName());
+    public RoleDTO createRole(RoleDTO.CreateDTO createDTO) {
+        log.info("开始创建角色: {}", createDTO.getRoleName());
         
         // 参数校验
-        validateRoleForCreate(role);
+        validateRoleForCreate(createDTO);
         
         // 检查角色权限字符串是否已存在
-        if (roleRepository.findByRoleKeyAndDelFlag(role.getRoleKey(), 0).isPresent()) {
-            throw new IllegalArgumentException("角色权限字符串已存在: " + role.getRoleKey());
+        if (roleRepository.findByRoleKeyAndDelFlag(createDTO.getRoleKey(), 0).isPresent()) {
+            throw new BusinessException("角色权限字符串已存在: " + createDTO.getRoleKey());
         }
         
         // 检查角色名称是否已存在
-        if (roleRepository.findByRoleNameAndDelFlag(role.getRoleName(), 0).isPresent()) {
-            throw new IllegalArgumentException("角色名称已存在: " + role.getRoleName());
+        if (roleRepository.findByRoleNameAndDelFlag(createDTO.getRoleName(), 0).isPresent()) {
+            throw new BusinessException("角色名称已存在: " + createDTO.getRoleName());
         }
+        
+        // 转换为实体
+        Role role = roleDTOConverter.toEntity(createDTO);
         
         // 设置默认值
         if (role.getRoleSort() == null) {
@@ -181,50 +213,44 @@ public class RoleService {
         Role savedRole = roleRepository.save(role);
         log.info("角色创建成功: ID={}, 名称={}", savedRole.getId(), savedRole.getRoleName());
         
-        return savedRole;
+        return roleDTOConverter.toDTO(savedRole);
     }
 
     /**
      * 更新角色
-     * @param role 角色信息
+     * @param updateDTO 角色更新信息
      * @return 更新的角色
      */
     @Transactional
-    public Role updateRole(Role role) {
-        log.info("开始更新角色: ID={}, 名称={}", role.getId(), role.getRoleName());
+    public RoleDTO updateRole(RoleDTO.UpdateDTO updateDTO) {
+        log.info("开始更新角色: ID={}, 名称={}", updateDTO.getId(), updateDTO.getRoleName());
         
         // 参数校验
-        validateRoleForUpdate(role);
+        validateRoleForUpdate(updateDTO);
         
         // 检查角色是否存在
-        Role existingRole = findById(role.getId())
-            .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + role.getId()));
+        Role existingRole = roleRepository.findById(updateDTO.getId())
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + updateDTO.getId()));
         
         // 检查角色权限字符串是否已被其他角色使用
-        if (roleRepository.existsByRoleKeyAndIdNotAndDelFlag(role.getRoleKey(), role.getId(), 0)) {
-            throw new IllegalArgumentException("角色权限字符串已被其他角色使用: " + role.getRoleKey());
+        if (roleRepository.existsByRoleKeyAndIdNotAndDelFlag(updateDTO.getRoleKey(), updateDTO.getId(), 0)) {
+            throw new BusinessException("角色权限字符串已被其他角色使用: " + updateDTO.getRoleKey());
         }
         
         // 检查角色名称是否已被其他角色使用
-        if (roleRepository.existsByRoleNameAndIdNotAndDelFlag(role.getRoleName(), role.getId(), 0)) {
-            throw new IllegalArgumentException("角色名称已被其他角色使用: " + role.getRoleName());
+        if (roleRepository.existsByRoleNameAndIdNotAndDelFlag(updateDTO.getRoleName(), updateDTO.getId(), 0)) {
+            throw new BusinessException("角色名称已被其他角色使用: " + updateDTO.getRoleName());
         }
         
-        // 更新字段
-        existingRole.setRoleName(role.getRoleName());
-        existingRole.setRoleKey(role.getRoleKey());
-        existingRole.setRoleSort(role.getRoleSort());
-        existingRole.setDataScope(role.getDataScope());
-        existingRole.setMenuCheckStrictly(role.getMenuCheckStrictly());
-        existingRole.setDeptCheckStrictly(role.getDeptCheckStrictly());
-        existingRole.setStatus(role.getStatus());
-        existingRole.setRemark(role.getRemark());
+        // 更新实体
+        roleDTOConverter.updateEntity(existingRole, updateDTO);
         existingRole.setUpdateTime(LocalDateTime.now());
         
         Role savedRole = roleRepository.save(existingRole);
         log.info("角色更新成功: ID={}, 名称={}", savedRole.getId(), savedRole.getRoleName());
         
-        return savedRole;
+        return roleDTOConverter.toDTO(savedRole);
     }
 
     // ==================== 删除方法 ====================
@@ -241,8 +267,9 @@ public class RoleService {
             throw new IllegalArgumentException("角色ID不能为空");
         }
         
-        Role role = findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + id));
+        Role role = roleRepository.findById(id)
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + id));
         
         // 检查是否为超级管理员角色
         if (role.isAdmin()) {
@@ -286,8 +313,9 @@ public class RoleService {
     public void enableRole(Long id) {
         log.info("开始启用角色: ID={}", id);
         
-        Role role = findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + id));
+        Role role = roleRepository.findById(id)
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + id));
         
         role.enable();
         role.setUpdateTime(LocalDateTime.now());
@@ -304,8 +332,9 @@ public class RoleService {
     public void disableRole(Long id) {
         log.info("开始停用角色: ID={}", id);
         
-        Role role = findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + id));
+        Role role = roleRepository.findById(id)
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + id));
         
         // 检查是否为超级管理员角色
         if (role.isAdmin()) {
@@ -323,37 +352,54 @@ public class RoleService {
 
     /**
      * 校验角色创建参数
-     * @param role 角色信息
+     * @param createDTO 角色创建信息
      */
-    private void validateRoleForCreate(Role role) {
-        if (role == null) {
-            throw new IllegalArgumentException("角色信息不能为空");
+    private void validateRoleForCreate(RoleDTO.CreateDTO createDTO) {
+        if (createDTO == null) {
+            throw new BusinessException("角色信息不能为空");
         }
-        if (!StringUtils.hasText(role.getRoleName())) {
-            throw new IllegalArgumentException("角色名称不能为空");
+        if (!StringUtils.hasText(createDTO.getRoleName())) {
+            throw new BusinessException("角色名称不能为空");
         }
-        if (!StringUtils.hasText(role.getRoleKey())) {
-            throw new IllegalArgumentException("角色权限字符串不能为空");
+        if (!StringUtils.hasText(createDTO.getRoleKey())) {
+            throw new BusinessException("角色权限字符串不能为空");
         }
-        if (role.getRoleName().length() > 30) {
-            throw new IllegalArgumentException("角色名称长度不能超过30个字符");
+        if (createDTO.getRoleName().length() > 30) {
+            throw new BusinessException("角色名称长度不能超过30个字符");
         }
-        if (role.getRoleKey().length() > 100) {
-            throw new IllegalArgumentException("角色权限字符串长度不能超过100个字符");
+        if (createDTO.getRoleKey().length() > 100) {
+            throw new BusinessException("角色权限字符串长度不能超过100个字符");
         }
-        if (role.getRemark() != null && role.getRemark().length() > 500) {
-            throw new IllegalArgumentException("备注长度不能超过500个字符");
+        if (createDTO.getRemark() != null && createDTO.getRemark().length() > 500) {
+            throw new BusinessException("备注长度不能超过500个字符");
         }
     }
 
     /**
      * 校验角色更新参数
-     * @param role 角色信息
+     * @param updateDTO 角色更新信息
      */
-    private void validateRoleForUpdate(Role role) {
-        validateRoleForCreate(role);
-        if (role.getId() == null) {
-            throw new IllegalArgumentException("角色ID不能为空");
+    private void validateRoleForUpdate(RoleDTO.UpdateDTO updateDTO) {
+        if (updateDTO == null) {
+            throw new BusinessException("角色信息不能为空");
+        }
+        if (updateDTO.getId() == null) {
+            throw new BusinessException("角色ID不能为空");
+        }
+        if (!StringUtils.hasText(updateDTO.getRoleName())) {
+            throw new BusinessException("角色名称不能为空");
+        }
+        if (!StringUtils.hasText(updateDTO.getRoleKey())) {
+            throw new BusinessException("角色权限字符串不能为空");
+        }
+        if (updateDTO.getRoleName().length() > 30) {
+            throw new BusinessException("角色名称长度不能超过30个字符");
+        }
+        if (updateDTO.getRoleKey().length() > 100) {
+            throw new BusinessException("角色权限字符串长度不能超过100个字符");
+        }
+        if (updateDTO.getRemark() != null && updateDTO.getRemark().length() > 500) {
+            throw new BusinessException("备注长度不能超过500个字符");
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.yc.admin.menu.controller;
 
 import com.yc.admin.common.core.Result;
-import com.yc.admin.menu.entity.Menu;
+import com.yc.admin.menu.dto.MenuDTO;
 import com.yc.admin.menu.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,13 +45,11 @@ public class MenuController {
     @GetMapping("/{id}")
     @Operation(summary = "获取菜单详情", description = "根据菜单ID获取菜单详细信息")
     @PreAuthorize("hasAuthority('system:menu:query')")
-    public Result<Menu> getMenuById(
+    public Result<?> getMenuById(
             @Parameter(description = "菜单ID", required = true)
             @PathVariable @NotNull Long id) {
 
-        return menuService.findById(id)
-                .map(Result::success)
-                .orElse(Result.error("菜单不存在"));
+        return Result.success(menuService.findById(id));
     }
 
     /**
@@ -66,7 +64,7 @@ public class MenuController {
     @GetMapping("/list")
     @Operation(summary = "获取菜单列表", description = "根据条件查询菜单列表")
     @PreAuthorize("hasAuthority('system:menu:list')")
-    public Result<List<Menu>> getMenuList(
+    public Result<List<MenuDTO>> getMenuList(
             @Parameter(description = "菜单名称")
             @RequestParam(required = false) String menuName,
             @Parameter(description = "菜单类型：M=目录,C=菜单,F=按钮")
@@ -76,7 +74,7 @@ public class MenuController {
             @Parameter(description = "可见性：0=显示,1=隐藏")
             @RequestParam(required = false) Integer visible) {
 
-        List<Menu> menus;
+        List<MenuDTO> menus;
 
         // 根据不同条件查询
         if (menuType != null) {
@@ -118,7 +116,7 @@ public class MenuController {
     @GetMapping("/page")
     @Operation(summary = "分页查询菜单", description = "根据条件分页查询菜单列表")
     @PreAuthorize("hasAuthority('system:menu:list')")
-    public Result<Page<Menu>> getMenuPage(
+    public Result<Page<MenuDTO>> getMenuPage(
             @Parameter(description = "菜单名称")
             @RequestParam(required = false) String menuName,
             @Parameter(description = "菜单类型：M=目录,C=菜单,F=按钮")
@@ -132,7 +130,7 @@ public class MenuController {
             @Parameter(description = "每页大小")
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Menu> menuPage = menuService.findByConditions(menuName, menuType, status, visible, page, size);
+        Page<MenuDTO> menuPage = menuService.findByConditions(menuName, menuType, status, visible, page, size);
         return Result.success(menuPage);
     }
 
@@ -144,8 +142,8 @@ public class MenuController {
     @GetMapping("/tree")
     @Operation(summary = "获取菜单树", description = "获取完整的菜单树结构")
     @PreAuthorize("hasAuthority('system:menu:list')")
-    public Result<List<MenuService.MenuTreeNode>> getMenuTree() {
-        List<MenuService.MenuTreeNode> menuTree = menuService.buildMenuTree();
+    public Result<List<MenuDTO.TreeNodeDTO>> getMenuTree() {
+        List<MenuDTO.TreeNodeDTO> menuTree = menuService.buildMenuTree();
         return Result.success(menuTree);
     }
 
@@ -158,11 +156,11 @@ public class MenuController {
     @GetMapping("/children/{parentId}")
     @Operation(summary = "获取子菜单列表", description = "根据父菜单ID获取子菜单列表")
     @PreAuthorize("hasAuthority('system:menu:list')")
-    public Result<List<Menu>> getChildrenMenus(
+    public Result<List<MenuDTO>> getChildrenMenus(
             @Parameter(description = "父菜单ID", required = true)
             @PathVariable @NotNull Long parentId) {
 
-        List<Menu> children = menuService.findByParentId(parentId);
+        List<MenuDTO> children = menuService.findByParentId(parentId);
         return Result.success(children);
     }
 
@@ -175,11 +173,11 @@ public class MenuController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "获取用户菜单权限", description = "根据用户ID获取用户拥有的菜单权限")
     @PreAuthorize("hasAuthority('system:menu:query')")
-    public Result<List<Menu>> getUserMenus(
+    public Result<List<MenuDTO>> getUserMenus(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
 
-        List<Menu> userMenus = menuService.findByUserId(userId);
+        List<MenuDTO> userMenus = menuService.findByUserId(userId);
         return Result.success(userMenus);
     }
 
@@ -192,11 +190,11 @@ public class MenuController {
     @GetMapping("/role/{roleId}")
     @Operation(summary = "获取角色菜单权限", description = "根据角色ID获取角色拥有的菜单权限")
     @PreAuthorize("hasAuthority('system:menu:query')")
-    public Result<List<Menu>> getRoleMenus(
+    public Result<List<MenuDTO>> getRoleMenus(
             @Parameter(description = "角色ID", required = true)
             @PathVariable @NotNull Long roleId) {
 
-        List<Menu> roleMenus = menuService.findByRoleId(roleId);
+        List<MenuDTO> roleMenus = menuService.findByRoleId(roleId);
         return Result.success(roleMenus);
     }
 
@@ -211,11 +209,11 @@ public class MenuController {
     @PostMapping
     @Operation(summary = "创建菜单", description = "创建新的菜单")
     @PreAuthorize("hasAuthority('system:menu:add')")
-    public Result<Menu> createMenu(
+    public Result<MenuDTO> createMenu(
             @Parameter(description = "菜单信息", required = true)
-            @RequestBody @Valid Menu menu) {
+            @RequestBody @Valid MenuDTO.CreateDTO menu) {
 
-        Menu createdMenu = menuService.createMenu(menu);
+        MenuDTO createdMenu = menuService.createMenu(menu);
         return Result.success("菜单创建成功", createdMenu);
     }
 
@@ -229,14 +227,14 @@ public class MenuController {
     @PutMapping("/{id}")
     @Operation(summary = "更新菜单", description = "更新指定菜单的信息")
     @PreAuthorize("hasAuthority('system:menu:edit')")
-    public Result<Menu> updateMenu(
+    public Result<MenuDTO> updateMenu(
             @Parameter(description = "菜单ID", required = true)
             @PathVariable @NotNull Long id,
             @Parameter(description = "菜单信息", required = true)
-            @RequestBody @Valid Menu menu) {
+            @RequestBody @Valid MenuDTO.UpdateDTO menu) {
 
         menu.setId(id);
-        Menu updatedMenu = menuService.updateMenu(menu);
+        MenuDTO updatedMenu = menuService.updateMenu(menu);
         return Result.success("菜单更新成功", updatedMenu);
     }
 

@@ -1,6 +1,7 @@
 package com.yc.admin.role.controller;
 
 import com.yc.admin.role.entity.Role;
+import com.yc.admin.role.dto.RoleDTO;
 import com.yc.admin.role.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +48,7 @@ public class RoleController {
             @RequestParam(defaultValue = "10") int size) {
         
         try {
-            Page<Role> rolePage = roleService.findByConditions(roleName, roleKey, status, page, size);
+            Page<RoleDTO> rolePage = roleService.findByConditions(roleName, roleKey, status, page, size);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -76,8 +77,7 @@ public class RoleController {
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getRoleById(@PathVariable Long id) {
         try {
-            Role role = roleService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + id));
+            RoleDTO role = roleService.findById(id);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -101,7 +101,7 @@ public class RoleController {
     @GetMapping("/select")
     public ResponseEntity<Map<String, Object>> getRolesForSelect() {
         try {
-            List<Role> roles = roleService.findAllForSelect();
+            List<RoleDTO.SelectorDTO> roles = roleService.findAllForSelect();
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -152,13 +152,13 @@ public class RoleController {
 
     /**
      * 创建角色
-     * @param role 角色信息
+     * @param createDTO 角色信息
      * @return 创建结果
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createRole(@Valid @RequestBody Role role) {
+    public ResponseEntity<Map<String, Object>> createRole(@Valid @RequestBody RoleDTO.CreateDTO createDTO) {
         try {
-            Role createdRole = roleService.createRole(role);
+            RoleDTO createdRole = roleService.createRole(createDTO);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -167,7 +167,7 @@ public class RoleController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("创建角色失败: {}", role.getRoleName(), e);
+            log.error("创建角色失败: {}", createDTO.getRoleName(), e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "创建失败: " + e.getMessage());
@@ -178,14 +178,13 @@ public class RoleController {
     /**
      * 更新角色
      * @param id 角色ID
-     * @param role 角色信息
+     * @param updateDTO 角色信息
      * @return 更新结果
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateRole(@PathVariable Long id, @Valid @RequestBody Role role) {
+    public ResponseEntity<Map<String, Object>> updateRole(@PathVariable Long id, @Valid @RequestBody RoleDTO.UpdateDTO updateDTO) {
         try {
-            role.setId(id);
-            Role updatedRole = roleService.updateRole(role);
+            RoleDTO updatedRole = roleService.updateRole(updateDTO);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

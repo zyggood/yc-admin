@@ -2,6 +2,8 @@ package com.yc.admin.menu.service;
 
 import com.yc.admin.common.exception.BusinessException;
 import com.yc.admin.menu.entity.Menu;
+import com.yc.admin.menu.dto.MenuDTO;
+import com.yc.admin.menu.dto.MenuDTOConverter;
 import com.yc.admin.menu.repository.MenuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +26,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MenuService {
 
     private final MenuRepository menuRepository;
+    private final MenuDTOConverter menuDTOConverter;
 
     // ==================== 查询方法 ====================
 
@@ -35,11 +39,27 @@ public class MenuService {
      * @param id 菜单ID
      * @return 菜单信息
      */
-    public Optional<Menu> findById(Long id) {
+    public MenuDTO findById(Long id) {
+        if (id == null) {
+            throw new BusinessException("菜单ID不能为空");
+        }
+        Menu menu = menuRepository.findById(id)
+                .filter(m -> m.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
+        return menuDTOConverter.toDTO(menu);
+    }
+
+    /**
+     * 根据ID查询菜单实体（内部使用）
+     * @param id 菜单ID
+     * @return 菜单实体
+     */
+    public Optional<Menu> findEntityById(Long id) {
         if (id == null) {
             return Optional.empty();
         }
-        return menuRepository.findById(id).filter(menu -> menu.getDelFlag() == 0);
+        return menuRepository.findById(id)
+                .filter(m -> m.getDelFlag() == 0);
     }
 
     /**
@@ -47,19 +67,21 @@ public class MenuService {
      * @param perms 权限标识
      * @return 菜单信息
      */
-    public Optional<Menu> findByPerms(String perms) {
+    public Optional<MenuDTO> findByPerms(String perms) {
         if (!StringUtils.hasText(perms)) {
             return Optional.empty();
         }
-        return menuRepository.findByPermsAndDelFlag(perms, 0);
+        return menuRepository.findByPermsAndDelFlag(perms, 0)
+                .map(menuDTOConverter::toDTO);
     }
 
     /**
      * 查询所有菜单列表
      * @return 菜单列表
      */
-    public List<Menu> findAll() {
-        return menuRepository.findByDelFlagOrderByOrderNumAsc(0);
+    public List<MenuDTO> findAll() {
+        List<Menu> menus = menuRepository.findByDelFlagOrderByOrderNumAsc(0);
+        return menuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -67,11 +89,12 @@ public class MenuService {
      * @param parentId 父菜单ID
      * @return 子菜单列表
      */
-    public List<Menu> findByParentId(Long parentId) {
+    public List<MenuDTO> findByParentId(Long parentId) {
         if (parentId == null) {
             parentId = Menu.TOP_PARENT_ID;
         }
-        return menuRepository.findByParentIdAndDelFlagOrderByOrderNumAsc(parentId, 0);
+        List<Menu> menus = menuRepository.findByParentIdAndDelFlagOrderByOrderNumAsc(parentId, 0);
+        return menuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -79,11 +102,12 @@ public class MenuService {
      * @param menuType 菜单类型
      * @return 菜单列表
      */
-    public List<Menu> findByMenuType(String menuType) {
+    public List<MenuDTO> findByMenuType(String menuType) {
         if (!StringUtils.hasText(menuType)) {
             return Collections.emptyList();
         }
-        return menuRepository.findByMenuTypeAndDelFlagOrderByOrderNumAsc(menuType, 0);
+        List<Menu> menus = menuRepository.findByMenuTypeAndDelFlagOrderByOrderNumAsc(menuType, 0);
+        return menuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -91,11 +115,12 @@ public class MenuService {
      * @param status 状态
      * @return 菜单列表
      */
-    public List<Menu> findByStatus(Integer status) {
+    public List<MenuDTO> findByStatus(Integer status) {
         if (status == null) {
             return Collections.emptyList();
         }
-        return menuRepository.findByStatusAndDelFlagOrderByOrderNumAsc(status, 0);
+        List<Menu> menus = menuRepository.findByStatusAndDelFlagOrderByOrderNumAsc(status, 0);
+        return menuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -108,9 +133,9 @@ public class MenuService {
      * @param size 每页大小
      * @return 分页结果
      */
-    public Page<Menu> findByConditions(String menuName, String menuType, Integer status, Integer visible, int page, int size) {
+    public Page<MenuDTO> findByConditions(String menuName, String menuType, Integer status, Integer visible, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return menuRepository.findByConditions(
+        Page<Menu> menuPage = menuRepository.findByConditions(
             StringUtils.hasText(menuName) ? menuName.trim() : null,
             StringUtils.hasText(menuType) ? menuType.trim() : null,
             status,
@@ -118,15 +143,16 @@ public class MenuService {
             0,
             pageable
         );
+        return menuDTOConverter.toDTOPage(menuPage);
     }
 
     /**
      * 构建菜单树
      * @return 菜单树列表
      */
-    public List<MenuTreeNode> buildMenuTree() {
-        List<Menu> allMenus = findAll();
-        return buildMenuTree(allMenus, Menu.TOP_PARENT_ID);
+    public List<MenuDTO.TreeNodeDTO> buildMenuTree() {
+        List<Menu> allMenus = menuRepository.findByDelFlagOrderByOrderNumAsc(0);
+        return menuDTOConverter.toTreeNodeDTOList(allMenus);
     }
 
     /**
@@ -135,15 +161,22 @@ public class MenuService {
      * @param parentId 父菜单ID
      * @return 菜单树列表
      */
-    public List<MenuTreeNode> buildMenuTree(List<Menu> menus, Long parentId) {
+    public List<MenuDTO.TreeNodeDTO> buildMenuTree(List<Menu> menus, Long parentId) {
+        return menuDTOConverter.toTreeNodeDTOList(menus);
+    }
+
+    /**
+     * 内部方法：构建菜单树映射
+     * @param menus 菜单列表
+     * @return 菜单映射
+     */
+    private Map<Long, List<Menu>> buildMenuMap(List<Menu> menus) {
         if (menus == null || menus.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
-        Map<Long, List<Menu>> menuMap = menus.stream()
+        return menus.stream()
             .collect(Collectors.groupingBy(Menu::getParentId));
-
-        return buildMenuTreeRecursive(menuMap, parentId);
     }
 
     /**
@@ -193,11 +226,30 @@ public class MenuService {
      * @param userId 用户ID
      * @return 菜单列表
      */
-    public List<Menu> findByUserId(Long userId) {
+    public List<MenuDTO> findByUserId(Long userId) {
         if (userId == null) {
             return Collections.emptyList();
         }
-        return menuRepository.findByUserId(userId);
+        List<Menu> menus = menuRepository.findByUserId(userId);
+        return menuDTOConverter.toDTOList(menus);
+    }
+
+    /**
+     * 根据用户ID查询权限标识
+     * @param userId 用户ID
+     * @return 权限标识列表
+     */
+    public List<String> findPermissionsByUserId(Long userId) {
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+        
+        List<Menu> menus = menuRepository.findByUserId(userId);
+        return menus.stream()
+                .filter(menu -> StringUtils.hasText(menu.getPerms()))
+                .map(Menu::getPerms)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     /**
@@ -205,23 +257,27 @@ public class MenuService {
      * @param roleId 角色ID
      * @return 菜单列表
      */
-    public List<Menu> findByRoleId(Long roleId) {
+    public List<MenuDTO> findByRoleId(Long roleId) {
         if (roleId == null) {
             return Collections.emptyList();
         }
-        return menuRepository.findByRoleId(roleId);
+        List<Menu> menus = menuRepository.findByRoleId(roleId);
+        return menuDTOConverter.toDTOList(menus);
     }
 
     // ==================== 创建和更新方法 ====================
 
     /**
      * 创建菜单
-     * @param menu 菜单信息
+     * @param createDTO 菜单创建信息
      * @return 创建的菜单
      */
     @Transactional
-    public Menu createMenu(Menu menu) {
-        validateMenuForCreate(menu);
+    public MenuDTO createMenu(MenuDTO.CreateDTO createDTO) {
+        validateMenuForCreate(createDTO);
+        
+        // 转换为实体
+        Menu menu = menuDTOConverter.toEntity(createDTO);
         
         // 设置默认值
         if (menu.getParentId() == null) {
@@ -246,45 +302,33 @@ public class MenuService {
         
         Menu savedMenu = menuRepository.save(menu);
         log.info("创建菜单成功: {}", savedMenu.getMenuName());
-        return savedMenu;
+        return menuDTOConverter.toDTO(savedMenu);
     }
 
     /**
      * 更新菜单
-     * @param menu 菜单信息
+     * @param updateDTO 菜单更新信息
      * @return 更新的菜单
      */
     @Transactional
-    public Menu updateMenu(Menu menu) {
-        validateMenuForUpdate(menu);
+    public MenuDTO updateMenu(MenuDTO.UpdateDTO updateDTO) {
+        validateMenuForUpdate(updateDTO);
         
-        Menu existingMenu = findById(menu.getId())
-            .orElseThrow(() -> new BusinessException("菜单不存在"));
+        Menu existingMenu = menuRepository.findById(updateDTO.getId())
+                .filter(m -> m.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("菜单不存在: " + updateDTO.getId()));
         
         // 检查是否修改了父菜单，避免形成循环引用
-        if (!Objects.equals(existingMenu.getParentId(), menu.getParentId())) {
-            validateParentMenu(menu.getId(), menu.getParentId());
+        if (!Objects.equals(existingMenu.getParentId(), updateDTO.getParentId())) {
+            validateParentMenu(updateDTO.getId(), updateDTO.getParentId());
         }
         
-        // 更新字段
-        existingMenu.setMenuName(menu.getMenuName());
-        existingMenu.setParentId(menu.getParentId());
-        existingMenu.setOrderNum(menu.getOrderNum());
-        existingMenu.setPath(menu.getPath());
-        existingMenu.setComponent(menu.getComponent());
-        existingMenu.setQuery(menu.getQuery());
-        existingMenu.setIsFrame(menu.getIsFrame());
-        existingMenu.setIsCache(menu.getIsCache());
-        existingMenu.setMenuType(menu.getMenuType());
-        existingMenu.setVisible(menu.getVisible());
-        existingMenu.setStatus(menu.getStatus());
-        existingMenu.setPerms(menu.getPerms());
-        existingMenu.setIcon(menu.getIcon());
-        existingMenu.setRemark(menu.getRemark());
+        // 更新实体
+        menuDTOConverter.updateEntity(existingMenu, updateDTO);
         
         Menu savedMenu = menuRepository.save(existingMenu);
         log.info("更新菜单成功: {}", savedMenu.getMenuName());
-        return savedMenu;
+        return menuDTOConverter.toDTO(savedMenu);
     }
 
     // ==================== 删除方法 ====================
@@ -295,8 +339,9 @@ public class MenuService {
      */
     @Transactional
     public void deleteMenu(Long id) {
-        Menu menu = findById(id)
-            .orElseThrow(() -> new BusinessException("菜单不存在"));
+        Menu menu = menuRepository.findById(id)
+                .filter(m -> m.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
         
         // 检查是否存在子菜单
         if (menuRepository.existsByParentIdAndDelFlag(id, 0)) {
@@ -325,8 +370,9 @@ public class MenuService {
         
         // 检查每个菜单是否可以删除
         for (Long id : ids) {
-            Menu menu = findById(id)
-                .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
+            Menu menu = menuRepository.findById(id)
+                    .filter(m -> m.getDelFlag() == 0)
+                    .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
             
             if (menuRepository.existsByParentIdAndDelFlag(id, 0)) {
                 throw new BusinessException("菜单 [" + menu.getMenuName() + "] 存在子菜单，无法删除");
@@ -365,7 +411,7 @@ public class MenuService {
      */
     @Transactional
     public void updateMenuStatus(Long id, Integer status) {
-        Menu menu = findById(id)
+        Menu menu = findEntityById(id)
             .orElseThrow(() -> new BusinessException("菜单不存在"));
         
         menuRepository.updateStatusById(id, status);
@@ -429,85 +475,104 @@ public class MenuService {
 
     /**
      * 验证创建菜单的参数
-     * @param menu 菜单信息
+     * @param createDTO 菜单创建信息
      */
-    private void validateMenuForCreate(Menu menu) {
-        if (menu == null) {
-            throw new IllegalArgumentException("菜单信息不能为空");
+    private void validateMenuForCreate(MenuDTO.CreateDTO createDTO) {
+        if (createDTO == null) {
+            throw new BusinessException("菜单信息不能为空");
         }
         
-        validateMenuCommon(menu);
+        validateMenuCommon(createDTO);
         
         // 检查同级菜单名称是否重复
-        Long parentId = menu.getParentId() != null ? menu.getParentId() : Menu.TOP_PARENT_ID;
-        if (menuRepository.existsByMenuNameAndParentIdAndIdNotAndDelFlag(menu.getMenuName(), parentId, -1L, 0)) {
-            throw new IllegalArgumentException("同级菜单名称已存在: " + menu.getMenuName());
+        Long parentId = createDTO.getParentId() != null ? createDTO.getParentId() : Menu.TOP_PARENT_ID;
+        if (menuRepository.existsByMenuNameAndParentIdAndIdNotAndDelFlag(createDTO.getMenuName(), parentId, -1L, 0)) {
+            throw new BusinessException("同级菜单名称已存在: " + createDTO.getMenuName());
         }
         
         // 检查权限标识是否重复
-        if (StringUtils.hasText(menu.getPerms()) && 
-            menuRepository.existsByPermsAndIdNotAndDelFlag(menu.getPerms(), -1L, 0)) {
-            throw new IllegalArgumentException("权限标识已存在: " + menu.getPerms());
+        if (StringUtils.hasText(createDTO.getPerms()) && 
+            menuRepository.existsByPermsAndIdNotAndDelFlag(createDTO.getPerms(), -1L, 0)) {
+            throw new BusinessException("权限标识已存在: " + createDTO.getPerms());
         }
     }
 
     /**
      * 验证更新菜单的参数
-     * @param menu 菜单信息
+     * @param updateDTO 菜单更新信息
      */
-    private void validateMenuForUpdate(Menu menu) {
-        if (menu == null) {
-            throw new IllegalArgumentException("菜单信息不能为空");
+    private void validateMenuForUpdate(MenuDTO.UpdateDTO updateDTO) {
+        if (updateDTO == null) {
+            throw new BusinessException("菜单信息不能为空");
         }
         
-        if (menu.getId() == null) {
-            throw new IllegalArgumentException("菜单ID不能为空");
+        if (updateDTO.getId() == null) {
+            throw new BusinessException("菜单ID不能为空");
         }
         
-        validateMenuCommon(menu);
+        validateMenuCommon(updateDTO);
         
         // 检查同级菜单名称是否重复
-        Long parentId = menu.getParentId() != null ? menu.getParentId() : Menu.TOP_PARENT_ID;
-        if (menuRepository.existsByMenuNameAndParentIdAndIdNotAndDelFlag(menu.getMenuName(), parentId, menu.getId(), 0)) {
-            throw new IllegalArgumentException("同级菜单名称已存在: " + menu.getMenuName());
+        Long parentId = updateDTO.getParentId() != null ? updateDTO.getParentId() : Menu.TOP_PARENT_ID;
+        if (menuRepository.existsByMenuNameAndParentIdAndIdNotAndDelFlag(updateDTO.getMenuName(), parentId, updateDTO.getId(), 0)) {
+            throw new BusinessException("同级菜单名称已存在: " + updateDTO.getMenuName());
         }
         
         // 检查权限标识是否重复
-        if (StringUtils.hasText(menu.getPerms()) && 
-            menuRepository.existsByPermsAndIdNotAndDelFlag(menu.getPerms(), menu.getId(), 0)) {
-            throw new IllegalArgumentException("权限标识已存在: " + menu.getPerms());
+        if (StringUtils.hasText(updateDTO.getPerms()) && 
+            menuRepository.existsByPermsAndIdNotAndDelFlag(updateDTO.getPerms(), updateDTO.getId(), 0)) {
+            throw new BusinessException("权限标识已存在: " + updateDTO.getPerms());
         }
     }
 
     /**
      * 通用菜单验证
-     * @param menu 菜单信息
+     * @param menuDTO 菜单信息
      */
-    private void validateMenuCommon(Menu menu) {
-        if (!StringUtils.hasText(menu.getMenuName())) {
-            throw new IllegalArgumentException("菜单名称不能为空");
+    private void validateMenuCommon(Object menuDTO) {
+        String menuName = null;
+        String menuType = null;
+        String perms = null;
+        String path = null;
+        
+        if (menuDTO instanceof MenuDTO.CreateDTO) {
+            MenuDTO.CreateDTO createDTO = (MenuDTO.CreateDTO) menuDTO;
+            menuName = createDTO.getMenuName();
+            menuType = createDTO.getMenuType();
+            perms = createDTO.getPerms();
+            path = createDTO.getPath();
+        } else if (menuDTO instanceof MenuDTO.UpdateDTO) {
+            MenuDTO.UpdateDTO updateDTO = (MenuDTO.UpdateDTO) menuDTO;
+            menuName = updateDTO.getMenuName();
+            menuType = updateDTO.getMenuType();
+            perms = updateDTO.getPerms();
+            path = updateDTO.getPath();
         }
         
-        if (menu.getMenuName().length() > 50) {
-            throw new IllegalArgumentException("菜单名称长度不能超过50个字符");
+        if (!StringUtils.hasText(menuName)) {
+            throw new BusinessException("菜单名称不能为空");
         }
         
-        if (!StringUtils.hasText(menu.getMenuType())) {
-            throw new IllegalArgumentException("菜单类型不能为空");
+        if (menuName.length() > 50) {
+            throw new BusinessException("菜单名称长度不能超过50个字符");
         }
         
-        if (!Arrays.asList(Menu.Type.DIRECTORY, Menu.Type.MENU, Menu.Type.BUTTON).contains(menu.getMenuType())) {
-            throw new IllegalArgumentException("菜单类型只能是M、C、F");
+        if (!StringUtils.hasText(menuType)) {
+            throw new BusinessException("菜单类型不能为空");
+        }
+        
+        if (!Arrays.asList(Menu.Type.DIRECTORY, Menu.Type.MENU, Menu.Type.BUTTON).contains(menuType)) {
+            throw new BusinessException("菜单类型只能是M、C、F");
         }
         
         // 按钮类型必须有权限标识
-        if (Menu.Type.BUTTON.equals(menu.getMenuType()) && !StringUtils.hasText(menu.getPerms())) {
-            throw new IllegalArgumentException("按钮类型菜单必须设置权限标识");
+        if (Menu.Type.BUTTON.equals(menuType) && !StringUtils.hasText(perms)) {
+            throw new BusinessException("按钮类型菜单必须设置权限标识");
         }
         
         // 菜单类型必须有路由地址
-        if (Menu.Type.MENU.equals(menu.getMenuType()) && !StringUtils.hasText(menu.getPath())) {
-            throw new IllegalArgumentException("菜单类型必须设置路由地址");
+        if (Menu.Type.MENU.equals(menuType) && !StringUtils.hasText(path)) {
+            throw new BusinessException("菜单类型必须设置路由地址");
         }
     }
 

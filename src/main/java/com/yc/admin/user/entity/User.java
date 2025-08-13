@@ -37,6 +37,11 @@ public class User extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 超级管理员用户ID
+     */
+    public static final Long ADMIN_USER_ID = 1L;
+
+    /**
      * 用户账号
      */
     @NotBlank(message = "用户账号不能为空")

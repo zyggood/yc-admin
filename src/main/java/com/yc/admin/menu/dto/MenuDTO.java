@@ -3,6 +3,7 @@ package com.yc.admin.menu.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +18,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @Data
+@Builder
 @Schema(description = "菜单数据传输对象")
 public class MenuDTO {
 
@@ -25,7 +27,7 @@ public class MenuDTO {
 
     @NotBlank(message = "菜单名称不能为空")
     @Size(max = 50, message = "菜单名称长度不能超过50个字符")
-    @Schema(description = "菜单名称", required = true, example = "用户管理")
+    @Schema(description = "菜单名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "用户管理")
     private String menuName;
 
     @Schema(description = "父菜单ID", example = "0")
@@ -55,7 +57,7 @@ public class MenuDTO {
 
     @NotBlank(message = "菜单类型不能为空")
     @Pattern(regexp = "^[MCF]$", message = "菜单类型只能是M、C、F")
-    @Schema(description = "菜单类型（M目录 C菜单 F按钮）", required = true, example = "C")
+    @Schema(description = "菜单类型（M目录 C菜单 F按钮）", requiredMode = Schema.RequiredMode.REQUIRED, example = "C")
     private String menuType;
 
     @Schema(description = "菜单状态（0显示 1隐藏）", example = "0")
@@ -83,6 +85,12 @@ public class MenuDTO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
+
+    @Schema(description = "创建者")
+    private String createBy;
+
+    @Schema(description = "更新者")
+    private String updateBy;
 
     // ==================== 扩展字段 ====================
 
@@ -166,7 +174,7 @@ public class MenuDTO {
 
         @NotBlank(message = "菜单名称不能为空")
         @Size(max = 50, message = "菜单名称长度不能超过50个字符")
-        @Schema(description = "菜单名称", required = true)
+        @Schema(description = "菜单名称", requiredMode = Schema.RequiredMode.REQUIRED)
         private String menuName;
 
         @Schema(description = "父菜单ID，默认为0（顶级菜单）")
@@ -196,7 +204,7 @@ public class MenuDTO {
 
         @NotBlank(message = "菜单类型不能为空")
         @Pattern(regexp = "^[MCF]$", message = "菜单类型只能是M、C、F")
-        @Schema(description = "菜单类型（M目录 C菜单 F按钮）", required = true)
+        @Schema(description = "菜单类型（M目录 C菜单 F按钮）", requiredMode = Schema.RequiredMode.REQUIRED)
         private String menuType;
 
         @Schema(description = "菜单状态（0显示 1隐藏）")
@@ -227,7 +235,7 @@ public class MenuDTO {
     public static class UpdateDTO extends CreateDTO {
 
         @NotNull(message = "菜单ID不能为空")
-        @Schema(description = "菜单ID", required = true)
+        @Schema(description = "菜单ID", requiredMode = Schema.RequiredMode.REQUIRED)
         private Long id;
     }
 
@@ -241,11 +249,11 @@ public class MenuDTO {
     public static class BatchStatusUpdateDTO {
 
         @NotEmpty(message = "菜单ID列表不能为空")
-        @Schema(description = "菜单ID列表", required = true)
+        @Schema(description = "菜单ID列表", requiredMode = Schema.RequiredMode.REQUIRED)
         private List<Long> ids;
 
         @NotNull(message = "状态不能为空")
-        @Schema(description = "状态（0正常 1停用）", required = true)
+        @Schema(description = "状态（0正常 1停用）", requiredMode = Schema.RequiredMode.REQUIRED)
         private Integer status;
     }
 
@@ -257,7 +265,7 @@ public class MenuDTO {
     public static class BatchDeleteDTO {
 
         @NotEmpty(message = "菜单ID列表不能为空")
-        @Schema(description = "菜单ID列表", required = true)
+        @Schema(description = "菜单ID列表", requiredMode = Schema.RequiredMode.REQUIRED)
         private List<Long> ids;
 
         @Schema(description = "是否强制删除（忽略子菜单检查）")
@@ -270,6 +278,7 @@ public class MenuDTO {
      * 菜单树节点DTO
      */
     @Data
+    @Builder
     @Schema(description = "菜单树节点")
     public static class TreeNodeDTO {
 
@@ -312,6 +321,9 @@ public class MenuDTO {
         @Schema(description = "排序号")
         private Integer orderNum;
 
+        @Schema(description = "节点路径")
+        private String path;
+
         @Schema(description = "扩展属性")
         private Object extra;
     }
@@ -322,8 +334,12 @@ public class MenuDTO {
      * 菜单权限DTO
      */
     @Data
+    @Builder
     @Schema(description = "菜单权限信息")
     public static class PermissionDTO {
+
+        @Schema(description = "权限ID")
+        private Long id;
 
         @Schema(description = "菜单ID")
         private Long menuId;
@@ -425,6 +441,7 @@ public class MenuDTO {
      * 菜单导出DTO
      */
     @Data
+    @Builder
     @Schema(description = "菜单导出数据")
     public static class ExportDTO {
 

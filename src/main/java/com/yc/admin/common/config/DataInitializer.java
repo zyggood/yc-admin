@@ -1,8 +1,8 @@
 package com.yc.admin.common.config;
 
-import com.yc.admin.role.entity.Role;
+import com.yc.admin.role.dto.RoleDTO;
 import com.yc.admin.role.service.RoleService;
-import com.yc.admin.user.entity.User;
+import com.yc.admin.user.dto.UserDTO;
 import com.yc.admin.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,17 +51,18 @@ public class DataInitializer implements CommandLineRunner {
         
         try {
             // 创建管理员用户
-            User adminUser = new User()
-                    .setUserName(adminUserName)
-                    .setNickName("系统管理员")
-                    .setEmail("admin@yc.com")
-                    .setPhone("13800138000")
-                    .setPassword("admin123")
-                    .setSex(User.Sex.UNKNOWN)
-                    .setStatus(User.Status.NORMAL)
-                    .setRemark("系统默认管理员账户");
+            UserDTO.CreateDTO adminUser = UserDTO.CreateDTO.builder()
+                    .userName(adminUserName)
+                    .nickName("系统管理员")
+                    .email("admin@yc.com")
+                    .phone("13800138000")
+                    .password("admin123")
+                    .sex("2") // UNKNOWN
+                    .status("0") // NORMAL
+                    .remark("系统默认管理员账户")
+                    .build();
             
-            User createdUser = userService.createUser(adminUser);
+            UserDTO createdUser = userService.createUser(adminUser);
             log.info("管理员账户创建成功: 用户名={}, ID={}", createdUser.getUserName(), createdUser.getId());
             log.info("默认管理员登录信息: 用户名=admin, 密码=admin123");
             
@@ -96,17 +97,18 @@ public class DataInitializer implements CommandLineRunner {
         
         try {
             // 创建超级管理员角色
-            Role adminRole = new Role()
-                    .setRoleName("超级管理员")
-                    .setRoleKey(adminRoleKey)
-                    .setRoleSort(1)
-                    .setDataScope(Role.DataScope.ALL)
-                    .setMenuCheckStrictly(true)
-                    .setDeptCheckStrictly(true)
-                    .setStatus(Role.Status.NORMAL)
-                    .setRemark("超级管理员角色，拥有系统所有权限");
+            RoleDTO.CreateDTO adminRole = RoleDTO.CreateDTO.builder()
+                    .roleName("超级管理员")
+                    .roleKey(adminRoleKey)
+                    .roleSort(1)
+                    .dataScope("1") // ALL
+                    .menuCheckStrictly(true)
+                    .deptCheckStrictly(true)
+                    .status("0") // NORMAL
+                    .remark("超级管理员角色，拥有系统所有权限")
+                    .build();
             
-            Role createdRole = roleService.createRole(adminRole);
+            RoleDTO createdRole = roleService.createRole(adminRole);
             log.info("超级管理员角色创建成功: 角色名={}, ID={}", createdRole.getRoleName(), createdRole.getId());
             
         } catch (Exception e) {
@@ -129,17 +131,18 @@ public class DataInitializer implements CommandLineRunner {
         
         try {
             // 创建普通用户角色
-            Role userRole = new Role()
-                    .setRoleName("普通用户")
-                    .setRoleKey(userRoleKey)
-                    .setRoleSort(2)
-                    .setDataScope(Role.DataScope.SELF)
-                    .setMenuCheckStrictly(true)
-                    .setDeptCheckStrictly(true)
-                    .setStatus(Role.Status.NORMAL)
-                    .setRemark("普通用户角色，拥有基础功能权限");
+            RoleDTO.CreateDTO userRole = RoleDTO.CreateDTO.builder()
+                    .roleName("普通用户")
+                    .roleKey(userRoleKey)
+                    .roleSort(2)
+                    .dataScope("5") // SELF
+                    .menuCheckStrictly(true)
+                    .deptCheckStrictly(true)
+                    .status("0") // NORMAL
+                    .remark("普通用户角色，拥有基础功能权限")
+                    .build();
             
-            Role createdRole = roleService.createRole(userRole);
+            RoleDTO createdRole = roleService.createRole(userRole);
             log.info("普通用户角色创建成功: 角色名={}, ID={}", createdRole.getRoleName(), createdRole.getId());
             
         } catch (Exception e) {

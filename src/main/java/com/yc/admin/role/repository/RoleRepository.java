@@ -166,4 +166,14 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
            "INNER JOIN Role r ON rm.roleId = r.id " +
            "WHERE r.roleKey IN :roleKeys AND r.status = '0' AND r.delFlag = 0")
     List<Long> findMenuIdsByRoleKeys(@Param("roleKeys") List<String> roleKeys);
+
+    /**
+     * 根据用户ID查询角色列表
+     * @param userId 用户ID
+     * @return 角色列表
+     */
+    @Query("SELECT r FROM Role r " +
+           "INNER JOIN UserRole ur ON r.id = ur.roleId " +
+           "WHERE ur.userId = :userId AND r.status = '0' AND r.delFlag = 0")
+    List<Role> findByUserId(@Param("userId") Long userId);
 }

@@ -2,6 +2,7 @@ package com.yc.admin.user.controller;
 
 import com.yc.admin.common.core.Result;
 import com.yc.admin.user.entity.User;
+import com.yc.admin.user.dto.UserDTO;
 import com.yc.admin.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,7 +57,7 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping
-    public ResponseEntity<Result<Page<User>>> getUserList(
+    public ResponseEntity<Result<Page<UserDTO>>> getUserList(
             @Parameter(description = "页码（从0开始）") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "用户名关键字") @RequestParam(required = false) String userName,
@@ -68,7 +69,7 @@ public class UserController {
                 page, size, userName, nickName, phone, status);
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> userPage;
+        Page<UserDTO> userPage;
 
         // 根据查询条件选择不同的查询方法
         if (StringUtils.hasText(userName) || StringUtils.hasText(nickName) ||
@@ -89,13 +90,12 @@ public class UserController {
      */
     @Operation(summary = "查询用户详情", description = "根据用户ID查询用户详细信息")
     @GetMapping("/{userId}")
-    public ResponseEntity<Result<User>> getUserById(
+    public ResponseEntity<Result<UserDTO>> getUserById(
             @Parameter(description = "用户ID") @PathVariable Long userId) {
         log.info("查询用户详情 - ID: {}", userId);
 
-        return userService.findById(userId)
-                .map(user -> ResponseEntity.ok(Result.success(user)))
-                .orElse(ResponseEntity.ok(Result.error("用户不存在")));
+        UserDTO user = userService.findById(userId);
+        return ResponseEntity.ok(Result.success(user));
     }
 
     /**
@@ -175,15 +175,15 @@ public class UserController {
     /**
      * 创建用户
      *
-     * @param user 用户信息
+     * @param createDTO 用户信息
      * @return 创建的用户
      */
     @PostMapping
-    public ResponseEntity<Result<User>> createUser(@Valid @RequestBody User user) {
-        log.info("创建用户 - 用户名: {}", user.getUserName());
+    public ResponseEntity<Result<UserDTO>> createUser(@Valid @RequestBody UserDTO.CreateDTO createDTO) {
+        log.info("创建用户 - 用户名: {}", createDTO.getUserName());
 
         try {
-            User createdUser = userService.createUser(user);
+            UserDTO createdUser = userService.createUser(createDTO);
             return ResponseEntity.ok(Result.success("用户创建成功", createdUser));
         } catch (Exception e) {
             log.error("创建用户失败", e);
@@ -197,18 +197,18 @@ public class UserController {
      * 更新用户信息
      *
      * @param userId 用户ID
-     * @param user   更新的用户信息
+     * @param updateDTO   更新的用户信息
      * @return 更新后的用户
      */
     @PutMapping("/{userId}")
-    public ResponseEntity<Result<User>> updateUser(
+    public ResponseEntity<Result<UserDTO>> updateUser(
             @PathVariable Long userId,
-            @Valid @RequestBody User user) {
+            @Valid @RequestBody UserDTO.UpdateDTO updateDTO) {
 
         log.info("更新用户信息 - ID: {}", userId);
 
         try {
-            User updatedUser = userService.updateUser(userId, user);
+            UserDTO updatedUser = userService.updateUser(userId, updateDTO);
             return ResponseEntity.ok(Result.success("用户更新成功", updatedUser));
         } catch (Exception e) {
             log.error("更新用户失败", e);
@@ -224,14 +224,14 @@ public class UserController {
      * @return 更新结果
      */
     @PutMapping("/{userId}/status")
-    public ResponseEntity<Result<User>> updateUserStatus(
+    public ResponseEntity<Result<UserDTO>> updateUserStatus(
             @PathVariable Long userId,
             @RequestParam String status) {
 
         log.info("更新用户状态 - ID: {}, 状态: {}", userId, status);
 
         try {
-            User updatedUser = userService.updateUserStatus(userId, status);
+            UserDTO updatedUser = userService.updateUserStatus(userId, status);
             return ResponseEntity.ok(Result.success("用户状态更新成功", updatedUser));
         } catch (Exception e) {
             log.error("更新用户状态失败", e);
@@ -337,11 +337,11 @@ public class UserController {
      * @return 用户列表
      */
     @GetMapping("/export")
-    public ResponseEntity<Result<List<User>>> exportUsers() {
+    public ResponseEntity<Result<List<UserDTO>>> exportUsers() {
         log.info("导出用户数据");
 
         try {
-            List<User> users = userService.findAllForExport();
+            List<UserDTO> users = userService.findAllForExport();
             return ResponseEntity.ok(Result.success("导出成功，共 " + users.size() + " 条记录", users));
         } catch (Exception e) {
             log.error("导出用户数据失败", e);
