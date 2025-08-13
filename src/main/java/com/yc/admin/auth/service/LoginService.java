@@ -6,8 +6,8 @@ import com.yc.admin.system.role.entity.Role;
 import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.user.entity.LoginUser;
 import com.yc.admin.system.user.entity.User;
-import com.yc.admin.system.user.service.UserService;
-import com.yc.admin.system.role.service.RoleService;
+import com.yc.admin.system.api.UserApiService;
+import com.yc.admin.system.api.RoleApiService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +36,8 @@ public class LoginService {
 
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
-    private final UserService userService;
-    private final RoleService roleService;
+    private final UserApiService userApiService;
+    private final RoleApiService roleApiService;
 
     /**
      * 用户登录
@@ -78,13 +78,13 @@ public class LoginService {
             result.put("token", token);
             result.put("tokenType", "Bearer");
             result.put("expiresIn", getTokenExpiration());
-            result.put("user", userService.findById(loginUser.getUser().getId()));
+            result.put("user", userApiService.findById(loginUser.getUser().getId()));
             
             return result;
             
         } catch (Exception e) {
             // 记录登录失败日志
-            User user = userService.findByUsername(username).orElse(null);
+            User user = userApiService.findByUsername(username).orElse(null);
             recordLoginLog(user, false, e.getMessage());
             
             log.warn("用户 {} 登录失败: {}", username, e.getMessage());
@@ -188,7 +188,7 @@ public class LoginService {
     public UserDTO getCurrentUser() {
         LoginUser loginUser = getCurrentLoginUser();
         if (loginUser != null && loginUser.getUser() != null) {
-            return userService.findById(loginUser.getUser().getId());
+            return userApiService.findById(loginUser.getUser().getId());
         }
         return null;
     }
@@ -239,7 +239,7 @@ public class LoginService {
         permissions.put("username", loginUser.getUsername());
         permissions.put("authorities", loginUser.getAuthorities());
         // 获取用户角色
-        List<Role> userRoles = roleService.findByUserId(loginUser.getUser().getId());
+        List<Role> userRoles = roleApiService.findByUserId(loginUser.getUser().getId());
         List<String> roleKeys = userRoles.stream()
             .map(Role::getRoleKey)
             .collect(java.util.stream.Collectors.toList());

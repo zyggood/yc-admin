@@ -1,11 +1,11 @@
 package com.yc.admin.auth.service;
 
-import com.yc.admin.system.menu.service.MenuService;
+import com.yc.admin.system.api.MenuApiService;
+import com.yc.admin.system.api.RoleApiService;
+import com.yc.admin.system.api.UserApiService;
 import com.yc.admin.system.role.entity.Role;
-import com.yc.admin.system.role.service.RoleService;
 import com.yc.admin.system.user.entity.LoginUser;
 import com.yc.admin.system.user.entity.User;
-import com.yc.admin.system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,16 +31,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserService userService;
-    private final RoleService roleService;
-    private final MenuService menuService;
+    private final UserApiService userApiService;
+    private final RoleApiService roleApiService;
+    private final MenuApiService menuApiService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("加载用户信息: {}", username);
         
         // 查询用户信息
-        User user = userService.findByUsername(username)
+        User user = userApiService.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
         
         // 检查用户状态
@@ -88,7 +88,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         try {
             // 通过用户ID获取菜单权限
-            List<String> menuPermissions = menuService.findPermissionsByUserId(userId);
+            List<String> menuPermissions = menuApiService.findPermissionsByUserId(userId);
             if (!CollectionUtils.isEmpty(menuPermissions)) {
                 permissions.addAll(menuPermissions);
             }
@@ -113,7 +113,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         try {
             // 通过用户ID获取角色
-            List<Role> userRoleList = roleService.findByUserId(userId);
+            List<Role> userRoleList = roleApiService.findByUserId(userId);
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 List<String> userRoles = userRoleList.stream()
                     .map(Role::getRoleKey)
@@ -140,7 +140,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         log.debug("根据用户ID加载用户信息: {}", userId);
         
         // 查询用户信息
-        User user = userService.findEntityById(userId)
+        User user = userApiService.findEntityById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + userId));
         
         // 检查用户状态

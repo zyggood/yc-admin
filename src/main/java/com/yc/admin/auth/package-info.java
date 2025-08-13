@@ -3,7 +3,7 @@
  * 负责用户登录、JWT令牌管理、权限验证等
  */
 @ApplicationModule(
-        allowedDependencies = {"common", "system"}
+        allowedDependencies = {"common", "system :: api"}
 )
 package com.yc.admin.auth;
 
