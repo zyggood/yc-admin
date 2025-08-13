@@ -3,7 +3,7 @@ package com.yc.admin.auth.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yc.admin.auth.service.TokenService;
 import com.yc.admin.common.core.Result;
-import com.yc.admin.user.entity.LoginUser;
+import com.yc.admin.system.user.entity.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @since 2024
  */
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "com.yc.admin.*.repository")
-@MapperScan(basePackages = "com.yc.admin.*.mapper")
+@EnableJpaRepositories(basePackages = "com.yc.admin.**.repository")
+@MapperScan(basePackages = "com.yc.admin.**.mapper")
 @EnableScheduling
 public class AdminApplication {
 

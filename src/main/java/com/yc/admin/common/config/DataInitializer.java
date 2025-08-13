@@ -1,9 +1,9 @@
 package com.yc.admin.common.config;
 
-import com.yc.admin.role.dto.RoleDTO;
-import com.yc.admin.role.service.RoleService;
-import com.yc.admin.user.dto.UserDTO;
-import com.yc.admin.user.service.UserService;
+import com.yc.admin.system.role.dto.RoleDTO;
+import com.yc.admin.system.role.service.RoleService;
+import com.yc.admin.system.user.dto.UserDTO;
+import com.yc.admin.system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

@@ -1,8 +1,8 @@
 package com.yc.admin.common.service;
 
-import com.yc.admin.user.repository.UserRoleRepository;
-import com.yc.admin.role.repository.RoleRepository;
-import com.yc.admin.menu.repository.MenuRepository;
+import com.yc.admin.system.user.repository.UserRoleRepository;
+import com.yc.admin.system.role.repository.RoleRepository;
+import com.yc.admin.system.menu.repository.MenuRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,11 +1,11 @@
 package com.yc.admin.auth.service;
 
-import com.yc.admin.menu.service.MenuService;
-import com.yc.admin.role.entity.Role;
-import com.yc.admin.role.service.RoleService;
-import com.yc.admin.user.entity.LoginUser;
-import com.yc.admin.user.entity.User;
-import com.yc.admin.user.service.UserService;
+import com.yc.admin.system.menu.service.MenuService;
+import com.yc.admin.system.role.entity.Role;
+import com.yc.admin.system.role.service.RoleService;
+import com.yc.admin.system.user.entity.LoginUser;
+import com.yc.admin.system.user.entity.User;
+import com.yc.admin.system.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;

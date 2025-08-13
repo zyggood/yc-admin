@@ -4,7 +4,7 @@ import com.yc.admin.auth.dto.LoginDTO;
 import com.yc.admin.auth.dto.RefreshTokenDTO;
 import com.yc.admin.auth.service.LoginService;
 import com.yc.admin.common.core.Result;
-import com.yc.admin.user.dto.UserDTO;
+import com.yc.admin.system.user.dto.UserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

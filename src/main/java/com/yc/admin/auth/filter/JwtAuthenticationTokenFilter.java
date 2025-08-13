@@ -1,7 +1,7 @@
 package com.yc.admin.auth.filter;
 
 import com.yc.admin.auth.service.TokenService;
-import com.yc.admin.user.entity.LoginUser;
+import com.yc.admin.system.user.entity.LoginUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
