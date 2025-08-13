@@ -1,7 +1,7 @@
 package com.yc.admin.auth.filter;
 
+import com.yc.admin.auth.dto.AuthLoginUser;
 import com.yc.admin.auth.service.TokenService;
-import com.yc.admin.system.user.entity.LoginUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +51,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 // 验证令牌并获取用户信息
-                LoginUser loginUser = tokenService.getLoginUser(token);
+                AuthLoginUser loginUser = tokenService.getLoginUser(token);
                 
                 if (loginUser != null && tokenService.verifyToken(loginUser)) {
                     // 创建认证对象

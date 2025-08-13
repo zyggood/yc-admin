@@ -1,7 +1,7 @@
 package com.yc.admin.auth.service;
 
 import com.yc.admin.auth.config.JwtProperties;
-import com.yc.admin.system.user.entity.LoginUser;
+import com.yc.admin.auth.dto.AuthLoginUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -49,15 +49,15 @@ public class TokenService {
     /**
      * 创建令牌
      * 
-     * @param loginUser 登录用户信息
+     * @param authLoginUser 登录用户信息
      * @return JWT 令牌
      */
-    public String createToken(LoginUser loginUser) {
+    public String createToken(AuthLoginUser authLoginUser) {
         String uuid = UUID.randomUUID().toString();
-        loginUser.setToken(uuid);
+        authLoginUser.setToken(uuid);
         
         // 将用户信息存储到 Redis
-        refreshToken(loginUser);
+        refreshToken(authLoginUser);
         
         // 生成 JWT 令牌
         Map<String, Object> claims = new HashMap<>();
@@ -72,7 +72,7 @@ public class TokenService {
      * @param token JWT 令牌
      * @return 登录用户信息
      */
-    public LoginUser getLoginUser(String token) {
+    public AuthLoginUser getLoginUser(String token) {
         if (!StringUtils.hasText(token)) {
             return null;
         }
@@ -83,7 +83,7 @@ public class TokenService {
             
             if (StringUtils.hasText(uuid)) {
                 String userKey = getTokenKey(uuid);
-                return (LoginUser) cacheService.get(userKey);
+                return (AuthLoginUser) cacheService.get(userKey);
             }
         } catch (Exception e) {
             log.warn("获取登录用户信息失败: {}", e.getMessage());
@@ -95,21 +95,21 @@ public class TokenService {
     /**
      * 验证令牌
      * 
-     * @param loginUser 登录用户信息
+     * @param authLoginUser 登录用户信息
      * @return 是否有效
      */
-    public boolean verifyToken(LoginUser loginUser) {
-        if (loginUser == null || !StringUtils.hasText(loginUser.getToken())) {
+    public boolean verifyToken(AuthLoginUser authLoginUser) {
+        if (authLoginUser == null || !StringUtils.hasText(authLoginUser.getToken())) {
             return false;
         }
         
         // 检查令牌是否过期
-        long expireTime = loginUser.getExpireTime();
+        long expireTime = authLoginUser.getExpireTime();
         long currentTime = System.currentTimeMillis();
         
         if (expireTime - currentTime <= Duration.ofMinutes(20).toMillis()) {
             // 令牌即将过期，刷新令牌
-            refreshToken(loginUser);
+            refreshToken(authLoginUser);
         }
         
         return true;
@@ -117,15 +117,15 @@ public class TokenService {
 
     /**
      * 刷新令牌有效期
-     * @param loginUser 登录用户信息
+     * @param authLoginUser 登录用户信息
      */
-    public void refreshToken(LoginUser loginUser) {
-        loginUser.setLoginTime(System.currentTimeMillis());
-        loginUser.setExpireTime(loginUser.getLoginTime() + jwtProperties.getExpiration());
+    public void refreshToken(AuthLoginUser authLoginUser) {
+        authLoginUser.setLoginTime(System.currentTimeMillis());
+        authLoginUser.setExpireTime(authLoginUser.getLoginTime() + jwtProperties.getExpiration());
         
         // 更新缓存中的用户信息
-        String userKey = getTokenKey(loginUser.getToken());
-        cacheService.set(userKey, loginUser, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
+        String userKey = getTokenKey(authLoginUser.getToken());
+        cacheService.set(userKey, authLoginUser, jwtProperties.getExpiration(), TimeUnit.MILLISECONDS);
     }
 
     /**

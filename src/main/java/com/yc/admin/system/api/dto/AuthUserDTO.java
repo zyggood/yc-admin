@@ -54,11 +54,16 @@ public class AuthUserDTO {
     private String phone;
     
     /**
+     * 头像
+     */
+    private String avatar;
+    
+    /**
      * 用户状态枚举
      */
     public enum Status {
-        ENABLED("1", "启用"),
-        DISABLED("0", "禁用");
+        NORMAL("0", "正常"),
+        DISABLED("1", "停用");
         
         private final String code;
         private final String desc;
@@ -77,7 +82,8 @@ public class AuthUserDTO {
         }
         
         public static Status fromCode(String code) {
-            for (Status status : values()) {
+            Status[] values = values();
+            for (Status status : values) {
                 if (status.code.equals(code)) {
                     return status;
                 }
@@ -90,7 +96,7 @@ public class AuthUserDTO {
      * 检查用户是否启用
      */
     public boolean isEnabled() {
-        return Status.ENABLED.getCode().equals(this.status);
+        return Status.NORMAL.getCode().equals(this.status);
     }
     
     /**

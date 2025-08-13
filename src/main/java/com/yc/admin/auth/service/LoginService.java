@@ -2,10 +2,10 @@ package com.yc.admin.auth.service;
 
 import com.yc.admin.auth.dto.LoginDTO;
 import com.yc.admin.common.exception.BusinessException;
-import com.yc.admin.system.role.entity.Role;
+import com.yc.admin.auth.dto.AuthLoginUser;
+import com.yc.admin.system.api.dto.AuthRoleDTO;
+import com.yc.admin.system.api.dto.AuthUserDTO;
 import com.yc.admin.system.user.dto.UserDTO;
-import com.yc.admin.system.user.entity.LoginUser;
-import com.yc.admin.system.user.entity.User;
 import com.yc.admin.system.api.UserApiService;
 import com.yc.admin.system.api.RoleApiService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,13 +63,13 @@ public class LoginService {
             );
             
             // 获取认证用户信息
-            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            AuthLoginUser authLoginUser = (AuthLoginUser) authentication.getPrincipal();
             
             // 记录登录日志
-            recordLoginLog(loginUser.getUser(), true, "登录成功");
+            recordLoginLog(authLoginUser.getUser(), true, "登录成功");
             
             // 生成令牌
-            String token = tokenService.createToken(loginUser);
+            String token = tokenService.createToken(authLoginUser);
             
             log.info("用户 {} 登录成功", username);
             
@@ -78,13 +78,13 @@ public class LoginService {
             result.put("token", token);
             result.put("tokenType", "Bearer");
             result.put("expiresIn", getTokenExpiration());
-            result.put("user", userApiService.findById(loginUser.getUser().getId()));
+            result.put("user", userApiService.findById(authLoginUser.getUser().getId()));
             
             return result;
             
         } catch (Exception e) {
             // 记录登录失败日志
-            User user = userApiService.findByUsername(username).orElse(null);
+            AuthUserDTO user = userApiService.findAuthUserByUsername(username).orElse(null);
             recordLoginLog(user, false, e.getMessage());
             
             log.warn("用户 {} 登录失败: {}", username, e.getMessage());
@@ -106,12 +106,12 @@ public class LoginService {
         
         try {
             // 获取当前用户信息
-            LoginUser loginUser = tokenService.getLoginUser(token);
-            if (loginUser != null) {
+            AuthLoginUser authLoginUser = tokenService.getLoginUser(token);
+            if (authLoginUser != null) {
                 // 记录登出日志
-                recordLoginLog(loginUser.getUser(), true, "登出成功");
+                recordLoginLog(authLoginUser.getUser(), true, "登出成功");
                 
-                log.info("用户 {} 登出成功", loginUser.getUsername());
+                log.info("用户 {} 登出成功", authLoginUser.getUsername());
             }
             
             // 删除令牌
@@ -135,23 +135,23 @@ public class LoginService {
         
         try {
             // 获取用户信息
-            LoginUser loginUser = tokenService.getLoginUser(token);
-            if (loginUser == null) {
+            AuthLoginUser authLoginUser = tokenService.getLoginUser(token);
+            if (authLoginUser == null) {
                 throw new BusinessException("令牌无效");
             }
             
             // 验证令牌
-            if (!tokenService.verifyToken(loginUser)) {
+            if (!tokenService.verifyToken(authLoginUser)) {
                 throw new BusinessException("令牌验证失败");
             }
             
             // 生成新令牌
-            String newToken = tokenService.createToken(loginUser);
+            String newToken = tokenService.createToken(authLoginUser);
             
             // 删除旧令牌
             tokenService.deleteToken(token);
             
-            log.info("用户 {} 令牌刷新成功", loginUser.getUsername());
+            log.info("用户 {} 令牌刷新成功", authLoginUser.getUsername());
             
             // 构建返回结果
             Map<String, Object> result = new HashMap<>();
@@ -172,10 +172,10 @@ public class LoginService {
      * 
      * @return 当前登录用户
      */
-    public LoginUser getCurrentLoginUser() {
+    public AuthLoginUser getCurrentLoginUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
-            return (LoginUser) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof AuthLoginUser) {
+            return (AuthLoginUser) authentication.getPrincipal();
         }
         return null;
     }
@@ -186,9 +186,9 @@ public class LoginService {
      * @return 当前用户信息
      */
     public UserDTO getCurrentUser() {
-        LoginUser loginUser = getCurrentLoginUser();
-        if (loginUser != null && loginUser.getUser() != null) {
-            return userApiService.findById(loginUser.getUser().getId());
+        AuthLoginUser authLoginUser = getCurrentLoginUser();
+        if (authLoginUser != null && authLoginUser.getUser() != null) {
+            return userApiService.findById(authLoginUser.getUser().getId());
         }
         return null;
     }
@@ -199,8 +199,8 @@ public class LoginService {
      * @return 用户ID
      */
     public Long getCurrentUserId() {
-        LoginUser loginUser = getCurrentLoginUser();
-        return loginUser != null && loginUser.getUser() != null ? loginUser.getUser().getId() : null;
+        AuthLoginUser authLoginUser = getCurrentLoginUser();
+        return authLoginUser != null && authLoginUser.getUser() != null ? authLoginUser.getUser().getId() : null;
     }
 
     /**
@@ -209,18 +209,18 @@ public class LoginService {
      * @return 用户名
      */
     public String getCurrentUsername() {
-        LoginUser loginUser = getCurrentLoginUser();
-        return loginUser != null ? loginUser.getUsername() : null;
+        AuthLoginUser authLoginUser = getCurrentLoginUser();
+        return authLoginUser != null ? authLoginUser.getUsername() : null;
     }
 
     /**
      * 创建令牌
      * 
-     * @param loginUser 登录用户
+     * @param authLoginUser 登录用户
      * @return JWT 令牌
      */
-    public String createToken(LoginUser loginUser) {
-        return tokenService.createToken(loginUser);
+    public String createToken(AuthLoginUser authLoginUser) {
+        return tokenService.createToken(authLoginUser);
     }
 
     /**
@@ -229,19 +229,19 @@ public class LoginService {
      * @return 权限信息
      */
     public Map<String, Object> getCurrentUserPermissions() {
-        LoginUser loginUser = getCurrentLoginUser();
-        if (loginUser == null) {
+        AuthLoginUser authLoginUser = getCurrentLoginUser();
+        if (authLoginUser == null) {
             throw new BusinessException("用户未登录");
         }
         
         Map<String, Object> permissions = new HashMap<>();
-        permissions.put("userId", loginUser.getUser().getId());
-        permissions.put("username", loginUser.getUsername());
-        permissions.put("authorities", loginUser.getAuthorities());
+        permissions.put("userId", authLoginUser.getUser().getId());
+        permissions.put("username", authLoginUser.getUsername());
+        permissions.put("authorities", authLoginUser.getAuthorities());
         // 获取用户角色
-        List<Role> userRoles = roleApiService.findByUserId(loginUser.getUser().getId());
+        List<AuthRoleDTO> userRoles = roleApiService.findAuthRolesByUserId(authLoginUser.getUser().getId());
         List<String> roleKeys = userRoles.stream()
-            .map(Role::getRoleKey)
+            .map(AuthRoleDTO::getRoleKey)
             .collect(java.util.stream.Collectors.toList());
         permissions.put("roles", roleKeys);
         
@@ -278,7 +278,7 @@ public class LoginService {
      * @param success 是否成功
      * @param message 消息
      */
-    private void recordLoginLog(User user, boolean success, String message) {
+    private void recordLoginLog(AuthUserDTO user, boolean success, String message) {
         try {
             // TODO: 实现登录日志记录功能
             // 可以记录到数据库或日志文件

@@ -77,6 +77,7 @@ public class UserApiServiceImpl implements UserApiService {
                 .nickName(user.getNickName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
+                .avatar(user.getAvatar())
                 .build();
     }
     

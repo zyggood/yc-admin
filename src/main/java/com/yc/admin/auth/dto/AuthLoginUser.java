@@ -41,6 +41,41 @@ public class AuthLoginUser implements UserDetails {
      */
     private Set<String> roles;
     
+    /**
+     * 令牌标识
+     */
+    private String token;
+    
+    /**
+     * 登录时间
+     */
+    private Long loginTime;
+    
+    /**
+     * 过期时间
+     */
+    private Long expireTime;
+    
+    /**
+     * 登录IP地址
+     */
+    private String ipaddr;
+    
+    /**
+     * 登录地点
+     */
+    private String loginLocation;
+    
+    /**
+     * 浏览器类型
+     */
+    private String browser;
+    
+    /**
+     * 操作系统
+     */
+    private String os;
+    
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 合并权限和角色
@@ -100,5 +135,55 @@ public class AuthLoginUser implements UserDetails {
      */
     public String getNickName() {
         return user != null ? user.getNickName() : null;
+    }
+    
+    /**
+     * 获取用户邮箱
+     */
+    public String getEmail() {
+        return user != null ? user.getEmail() : null;
+    }
+    
+    /**
+     * 获取用户手机号
+     */
+    public String getPhone() {
+        return user != null ? user.getPhone() : null;
+    }
+    
+    /**
+     * 获取用户头像
+     */
+    public String getAvatar() {
+        return user != null ? user.getAvatar() : null;
+    }
+    
+    /**
+     * 检查是否拥有指定权限
+     * 
+     * @param permission 权限标识
+     * @return 是否拥有权限
+     */
+    public boolean hasPermission(String permission) {
+        return permissions != null && permissions.contains(permission);
+    }
+    
+    /**
+     * 检查是否拥有指定角色
+     * 
+     * @param role 角色标识
+     * @return 是否拥有角色
+     */
+    public boolean hasRole(String role) {
+        return roles != null && roles.contains(role);
+    }
+    
+    /**
+     * 检查是否为超级管理员
+     * 
+     * @return 是否为超级管理员
+     */
+    public boolean isAdmin() {
+        return user != null && user.getId() != null && user.getId().equals(1L);
     }
 }

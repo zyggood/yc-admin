@@ -1,6 +1,7 @@
 package com.yc.admin.auth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yc.admin.auth.dto.AuthLoginUser;
 import com.yc.admin.auth.service.TokenService;
 import com.yc.admin.common.core.Result;
 import com.yc.admin.system.user.entity.LoginUser;
@@ -39,7 +40,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         
         try {
             // 获取登录用户信息
-            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            AuthLoginUser loginUser = (AuthLoginUser) authentication.getPrincipal();
             
             // 生成 JWT 令牌
             String token = tokenService.createToken(loginUser);
@@ -81,7 +82,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
      * @param loginUser 登录用户
      * @return 用户信息
      */
-    private Map<String, Object> buildUserInfo(LoginUser loginUser) {
+    private Map<String, Object> buildUserInfo(AuthLoginUser loginUser) {
         Map<String, Object> userInfo = new HashMap<>();
         
         if (loginUser.getUser() != null) {
@@ -90,7 +91,6 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
             userInfo.put("nickname", loginUser.getUser().getNickName());
             userInfo.put("email", loginUser.getUser().getEmail());
             userInfo.put("phone", loginUser.getUser().getPhone());
-            userInfo.put("avatar", loginUser.getUser().getAvatar());
             userInfo.put("status", loginUser.getUser().getStatus());
             userInfo.put("loginTime", System.currentTimeMillis());
         }
