@@ -2,7 +2,7 @@ package com.yc.admin.system.role.service;
 
 import com.yc.admin.system.role.entity.RoleMenu;
 import com.yc.admin.system.role.repository.RoleMenuRepository;
-import com.yc.admin.common.service.PermissionService;
+import com.yc.admin.system.permission.PermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

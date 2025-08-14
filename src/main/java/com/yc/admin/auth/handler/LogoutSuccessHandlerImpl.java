@@ -3,7 +3,7 @@ package com.yc.admin.auth.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yc.admin.auth.service.TokenService;
 import com.yc.admin.common.core.Result;
-import com.yc.admin.system.user.entity.LoginUser;
+import com.yc.admin.system.api.dto.AuthLoginUserDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
         
         try {
             // 获取当前用户信息
-            if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
+            if (authentication != null && authentication.getPrincipal() instanceof AuthLoginUserDTO loginUser) {
                 username = loginUser.getUsername();
             }
             

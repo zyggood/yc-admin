@@ -1,37 +1,39 @@
-package com.yc.admin.system.user.entity;
+package com.yc.admin.system.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 登录用户信息
- * 实现 Spring Security 的 UserDetails 接口，用于认证和授权
+ * 认证登录用户DTO
+ * 用于auth模块的用户认证信息传递，实现Spring Security的UserDetails接口
+ * 避免直接依赖system模块的LoginUser entity
  *
  * @author yc
  * @since 2024-01-01
  */
 @Data
+@Builder
 @NoArgsConstructor
-public class LoginUser implements UserDetails, Serializable {
+@AllArgsConstructor
+public class AuthLoginUserDTO implements UserDetails, Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
      * 用户信息
      */
-    private User user;
+    private AuthUserDTO user;
 
     /**
      * 权限集合
@@ -78,12 +80,6 @@ public class LoginUser implements UserDetails, Serializable {
      */
     private String os;
 
-    public LoginUser(User user, Set<String> permissions, Set<String> roles) {
-        this.user = user;
-        this.permissions = permissions;
-        this.roles = roles;
-    }
-
     @JsonIgnore
     @Override
     public String getPassword() {
@@ -110,7 +106,7 @@ public class LoginUser implements UserDetails, Serializable {
     @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
-        return user == null || !Objects.equals(user.getStatus(), User.Status.DISABLED);
+        return user == null || user.isEnabled();
     }
 
     /**
@@ -128,7 +124,7 @@ public class LoginUser implements UserDetails, Serializable {
     @JsonIgnore
     @Override
     public boolean isEnabled() {
-        return user != null && Objects.equals(user.getStatus(), User.Status.NORMAL);
+        return user != null && user.isEnabled();
     }
 
     /**
@@ -210,6 +206,6 @@ public class LoginUser implements UserDetails, Serializable {
      * @return 是否为超级管理员
      */
     public boolean isAdmin() {
-        return user != null && User.ADMIN_USER_ID.equals(user.getId());
+        return user != null && Long.valueOf(1L).equals(user.getId());
     }
 }

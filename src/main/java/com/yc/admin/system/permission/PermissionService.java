@@ -1,4 +1,4 @@
-package com.yc.admin.common.service;
+package com.yc.admin.system.permission;
 
 import com.yc.admin.system.user.repository.UserRoleRepository;
 import com.yc.admin.system.role.repository.RoleRepository;
