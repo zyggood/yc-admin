@@ -33,10 +33,10 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                        AuthenticationException exception) throws IOException, ServletException {
+                                        AuthenticationException exception) throws IOException {
         
         log.warn("用户登录失败: {}", exception.getMessage());
-        
+
         // 根据异常类型确定错误信息
         String errorMessage = getErrorMessage(exception);
         int errorCode = getErrorCode(exception);

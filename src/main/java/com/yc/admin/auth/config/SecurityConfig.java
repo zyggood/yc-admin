@@ -34,7 +34,7 @@ import java.util.Collections;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -70,7 +70,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Collections.singletonList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -84,13 +84,13 @@ public class SecurityConfig {
         http
             // 禁用 CSRF
             .csrf(AbstractHttpConfigurer::disable)
-            
+
             // 启用 CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
+
             // 会话管理 - 无状态
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            
+
             // 请求授权配置
             .authorizeHttpRequests(auth -> auth
                 // 静态资源放行
@@ -103,48 +103,44 @@ public class SecurityConfig {
                     "/static/**",
                     "/webjars/**"
                 ).permitAll()
-                
+
                 // 登录相关接口放行
                 .requestMatchers(
-                    "/api/auth/login",
-                    "/api/auth/logout",
-                    "/api/auth/captcha",
-                    "/api/auth/refresh"
+                    "/auth/login",
+                    "/auth/logout",
+                    "/auth/captcha",
+                    "/auth/refresh"
                 ).permitAll()
-                
+
                 // 健康检查接口放行
                 .requestMatchers(
                     "/actuator/health",
                     "/actuator/info"
                 ).permitAll()
-                
+
                 // Swagger 文档接口放行（开发环境）
                 .requestMatchers(
                     "/swagger-ui/**",
+                    "/swagger-ui.html",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/doc.html"
                 ).permitAll()
-                
+
                 // 其他所有请求需要认证
                 .anyRequest().authenticated()
             )
-            
+
             // 表单登录配置
-            .formLogin(form -> form
-                .loginProcessingUrl("/api/auth/login")
-                .successHandler(authenticationSuccessHandler)
-                .failureHandler(authenticationFailureHandler)
-                .permitAll()
-            )
-            
+            .formLogin(AbstractHttpConfigurer::disable)
+
             // 登出配置
             .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
+                .logoutUrl("/auth/logout")
                 .logoutSuccessHandler(logoutSuccessHandler)
                 .permitAll()
             )
-            
+
             // 异常处理
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
@@ -162,10 +158,10 @@ public class SecurityConfig {
                     );
                 })
             );
-        
+
         // 添加 JWT 过滤器
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 }

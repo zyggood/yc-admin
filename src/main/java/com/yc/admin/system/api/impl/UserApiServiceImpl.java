@@ -28,7 +28,7 @@ public class UserApiServiceImpl implements UserApiService {
 
     @Override
     public Optional<AuthUserDTO> findById(Long userId) {
-        return userService.findEntityById(userId).map(this::convertToAuthUserDTO);
+        return userService.findEntityById(userId).map(this::convertToAuthUserDTOWithoutPwd);
     }
     
     @Override
@@ -52,6 +52,21 @@ public class UserApiServiceImpl implements UserApiService {
                 .id(user.getId())
                 .userName(user.getUserName())
                 .password(user.getPassword())
+                .status(user.getStatus())
+                .nickName(user.getNickName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .avatar(user.getAvatar())
+                .build();
+    }
+
+    /**
+     * 将User实体转换为AuthUserDTO
+     */
+    private AuthUserDTO convertToAuthUserDTOWithoutPwd(User user) {
+        return AuthUserDTO.builder()
+                .id(user.getId())
+                .userName(user.getUserName())
                 .status(user.getStatus())
                 .nickName(user.getNickName())
                 .email(user.getEmail())
