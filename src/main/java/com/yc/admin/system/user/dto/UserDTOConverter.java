@@ -1,6 +1,7 @@
 package com.yc.admin.system.user.dto;
 
 import com.yc.admin.system.user.entity.User;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
@@ -86,6 +87,7 @@ public class UserDTOConverter {
         user.setAvatar(createDTO.getAvatar());
         user.setStatus(createDTO.getStatus());
         user.setRemark(createDTO.getRemark());
+        user.setPassword(createDTO.getPassword());
         return user;
     }
 
