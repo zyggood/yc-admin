@@ -78,7 +78,7 @@ public class LoginService {
             result.put("token", token);
             result.put("tokenType", "Bearer");
             result.put("expiresIn", getTokenExpiration());
-            result.put("user", userApiService.findById(authLoginUser.getUser().getId()));
+            result.put("user", userApiService.findById(authLoginUser.getUser().getId())); //TODO 这里把加密后密码传出去了，待修复
             
             return result;
             
