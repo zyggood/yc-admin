@@ -116,7 +116,7 @@ com.yc.admin/
   ```
   AI提示词: 创建sys_config参数配置表，包含config_id(主键)、config_name、config_key、config_value、config_type、create_by、create_time、update_by、update_time、remark字段。
   ```
-- [ ] 设计日志表 (sys_oper_log, sys_logininfor)
+- [ ] 设计日志表 (sys_oper_log, sys_login_info)
   ```
   AI提示词: 创建sys_oper_log操作日志表，包含oper_id、title、business_type、method、request_method、operator_type、oper_name、dept_name、oper_url、oper_ip、oper_location、oper_param、json_result、status、error_msg、oper_time字段。创建sys_logininfor登录日志表，包含info_id、user_name、ipaddr、login_location、browser、os、status、msg、login_time字段。
   ```
