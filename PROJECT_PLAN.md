@@ -322,7 +322,7 @@ log/
 **开发任务：**
 - [ ] 实现操作日志记录（AOP）
   ```
-  AI提示词: 创建@Log注解和LogAspect切面类。在切面中拦截Controller方法，记录操作模块、操作类型、操作描述、请求参数、返回结果、操作时间、操作人、操作IP等信息。支持异步日志记录，提高性能。
+  AI提示词: 创建@SysLog注解和SysLogAspect切面类。在切面中拦截Controller方法，记录操作模块、操作类型、操作描述、请求参数、返回结果、操作时间、操作人、操作IP等信息。支持异步日志记录，提高性能。
   ```
 - [ ] 实现登录日志记录
   ```
@@ -472,43 +472,6 @@ monitor/
 4. **参数校验**: 使用 @Valid 注解
 5. **接口文档**: 使用 Swagger/OpenAPI
 
-## 配置文件模板
-
-### application.yml
-```yaml
-spring:
-  application:
-    name: admin-system
-  profiles:
-    active: dev
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/admin_db?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-  security:
-    user:
-      name: admin
-      password: admin123
-
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.yc.admin.*.domain
-  configuration:
-    map-underscore-to-camel-case: true
-
-logging:
-  level:
-    com.yc.admin: debug
-    org.springframework.modulith: debug
-```
 
 ## AI 开发提示词
 
