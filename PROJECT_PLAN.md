@@ -29,13 +29,14 @@ com.yc.admin/
 └── log/             # 日志管理模块
 ```
 
-### 模块依赖关系
+### 模块依赖关系 todo重新梳理
 - common: 被所有模块依赖
 - user: 依赖 dept, role
 - role: 依赖 menu
 - system: 独立模块
 - monitor: 依赖 user
 - log: 独立模块
+
 
 ## 开发阶段规划
 
@@ -44,13 +45,13 @@ com.yc.admin/
 #### 1.1 项目初始化
 - [x] 创建 Maven 项目结构
 - [x] 配置 pom.xml 依赖
-- [ ] 创建 application.yml 配置文件
+- [x] 创建 application.yml 配置文件
   ```
   AI提示词: 创建 src/main/resources/application.yml 配置文件，包含数据源配置、JPA配置、MyBatis配置、日志配置。使用环境变量占位符，支持dev/test/prod多环境配置。参考项目计划中的配置模板。
   ```
-- [ ] 配置数据库连接
+- [x] 配置数据库连接
   ```
-  AI提示词: 在application.yml中配置MySQL数据库连接，包括连接池配置、事务配置。创建对应的数据库schema，确保字符集为utf8mb4。
+  AI提示词: 在application.yml中配置数据库连接，包括连接池配置、事务配置。
   ```
 - [x] 创建主启动类
   ```
@@ -70,7 +71,7 @@ com.yc.admin/
   ```
   AI提示词: 创建BaseEntity抽象类，包含id、createTime、updateTime、createBy、updateBy、delFlag字段。使用JPA注解@MappedSuperclass，添加Lombok注解。配置自动填充策略。
   ```
-- [ ] 创建分页查询工具类
+- [ ] 创建分页查询工具类 TODO 分页查询工具类是否有必要？ 直接使用 Spring Data的Pageable和Page ？
   ```
   AI提示词: 创建PageUtils工具类，封装Spring Data的Pageable和Page。提供构建分页参数、转换分页结果的方法。支持排序参数处理。
   ```
@@ -88,27 +89,27 @@ com.yc.admin/
   ```
   AI提示词: 创建sys_user表，包含user_id(主键)、user_name、nick_name、email、phone、sex、avatar、password、status、del_flag、create_by、create_time、update_by、update_time、remark字段。设置合适的索引和约束。
   ```
-- [ ] 设计部门表 (sys_dept)
+- [x] 设计部门表 (sys_dept)
   ```
   AI提示词: 创建sys_dept表，包含dept_id(主键)、parent_id、ancestors、dept_name、order_num、leader、phone、email、status、del_flag等字段。支持树形结构，ancestors字段存储祖级列表。
   ```
-- [ ] 设计角色表 (sys_role)
+- [x 设计角色表 (sys_role)
   ```
   AI提示词: 创建sys_role表，包含role_id(主键)、role_name、role_key、role_sort、data_scope、menu_check_strictly、dept_check_strictly、status、del_flag等字段。data_scope字段控制数据权限范围。
   ```
-- [ ] 设计菜单表 (sys_menu)
+- [x] 设计菜单表 (sys_menu)
   ```
   AI提示词: 创建sys_menu表，包含menu_id(主键)、menu_name、parent_id、order_num、path、component、query、is_frame、is_cache、menu_type、visible、status、perms、icon等字段。支持菜单和按钮权限。
   ```
-- [ ] 设计用户角色关联表 (sys_user_role)
+- [x] 设计用户角色关联表 (sys_user_role)
   ```
   AI提示词: 创建sys_user_role关联表，包含user_id、role_id字段作为联合主键。建立外键约束关联sys_user和sys_role表。
   ```
-- [ ] 设计角色菜单关联表 (sys_role_menu)
+- [x] 设计角色菜单关联表 (sys_role_menu)
   ```
   AI提示词: 创建sys_role_menu关联表，包含role_id、menu_id字段作为联合主键。建立外键约束关联sys_role和sys_menu表。
   ```
-- [ ] 设计字典表 (sys_dict_type, sys_dict_data)
+- [x] 设计字典表 (sys_dict_type, sys_dict_data)
   ```
   AI提示词: 创建sys_dict_type字典类型表和sys_dict_data字典数据表。type表包含dict_id、dict_name、dict_type、status等字段；data表包含dict_code、dict_sort、dict_label、dict_value、dict_type等字段。
   ```
