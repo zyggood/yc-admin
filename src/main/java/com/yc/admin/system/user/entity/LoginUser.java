@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Data
 @NoArgsConstructor
-public class LoginUser implements UserDetails, Serializable {
+public class LoginUser implements UserDetails {
 
     @Serial
     private static final long serialVersionUID = 1L;
