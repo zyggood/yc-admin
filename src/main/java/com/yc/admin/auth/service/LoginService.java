@@ -7,15 +7,20 @@ import com.yc.admin.system.api.dto.AuthRoleDTO;
 import com.yc.admin.system.api.dto.AuthUserDTO;
 import com.yc.admin.system.api.UserApiService;
 import com.yc.admin.system.api.RoleApiService;
+import com.yc.admin.common.util.UserAgentUtils;
+import com.yc.admin.system.api.dto.LoginLogEvent;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +43,7 @@ public class LoginService {
     private final TokenService tokenService;
     private final UserApiService userApiService;
     private final RoleApiService roleApiService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 用户登录
@@ -109,7 +115,7 @@ public class LoginService {
             AuthLoginUser authLoginUser = tokenService.getLoginUser(token);
             if (authLoginUser != null) {
                 // 记录登出日志
-                recordLoginLog(authLoginUser.getUser(), true, "登出成功");
+                recordLogoutLog(authLoginUser.getUser(), "登出成功");
                 
                 log.info("用户 {} 登出成功", authLoginUser.getUsername());
             }
@@ -280,12 +286,85 @@ public class LoginService {
      */
     private void recordLoginLog(AuthUserDTO user, boolean success, String message) {
         try {
-            // TODO: 实现登录日志记录功能
-            // 可以记录到数据库或日志文件
-            log.info("登录日志 - 用户: {}, 成功: {}, 消息: {}", 
-                user != null ? user.getUserName() : "未知", success, message);
+            HttpServletRequest request = getCurrentHttpRequest();
+            if (request == null) {
+                log.warn("无法获取HTTP请求，跳过登录日志记录");
+                return;
+            }
+            
+            String username = user != null ? user.getUserName() : "未知";
+            String ipAddr = UserAgentUtils.getClientIpAddress(request);
+            String userAgent = UserAgentUtils.getUserAgent(request);
+            String browser = UserAgentUtils.getBrowser(userAgent);
+            String os = UserAgentUtils.getOperatingSystem(userAgent);
+            String loginLocation = UserAgentUtils.getLoginLocation(ipAddr);
+            
+            // 发布登录日志事件（异步处理）
+            LoginLogEvent.EventType eventType = success ? 
+                    LoginLogEvent.EventType.LOGIN_SUCCESS : LoginLogEvent.EventType.LOGIN_FAILURE;
+            
+            LoginLogEvent loginLogEvent = new LoginLogEvent(
+                    this, eventType, username, ipAddr, userAgent, 
+                    loginLocation, browser, os, message
+            );
+            
+            eventPublisher.publishEvent(loginLogEvent);
+            
+            log.debug("登录日志事件发布成功 - 用户: {}, 成功: {}, IP: {}, 消息: {}", 
+                    username, success, ipAddr, message);
         } catch (Exception e) {
-            log.warn("记录登录日志失败: {}", e.getMessage());
+            log.warn("发布登录日志事件失败: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 记录登出日志
+     * 
+     * @param user 用户信息
+     * @param message 消息
+     */
+    private void recordLogoutLog(AuthUserDTO user, String message) {
+        try {
+            HttpServletRequest request = getCurrentHttpRequest();
+            if (request == null) {
+                log.warn("无法获取HTTP请求，跳过登出日志记录");
+                return;
+            }
+            
+            String username = user != null ? user.getUserName() : "未知";
+            String ipAddr = UserAgentUtils.getClientIpAddress(request);
+            String userAgent = UserAgentUtils.getUserAgent(request);
+            String browser = UserAgentUtils.getBrowser(userAgent);
+            String os = UserAgentUtils.getOperatingSystem(userAgent);
+            String loginLocation = UserAgentUtils.getLoginLocation(ipAddr);
+            
+            // 发布登出日志事件（异步处理）
+            LoginLogEvent logoutEvent = new LoginLogEvent(
+                    this, LoginLogEvent.EventType.LOGOUT, username, ipAddr, userAgent, 
+                    loginLocation, browser, os, message
+            );
+            
+            eventPublisher.publishEvent(logoutEvent);
+            
+            log.debug("登出日志事件发布成功 - 用户: {}, IP: {}, 消息: {}", 
+                    username, ipAddr, message);
+        } catch (Exception e) {
+            log.warn("发布登出日志事件失败: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取当前HTTP请求
+     * 
+     * @return HTTP请求对象
+     */
+    private HttpServletRequest getCurrentHttpRequest() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            return attributes != null ? attributes.getRequest() : null;
+        } catch (Exception e) {
+            log.warn("获取HTTP请求失败: {}", e.getMessage());
+            return null;
         }
     }
 }
