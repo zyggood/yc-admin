@@ -5,9 +5,7 @@ import com.yc.admin.system.log.entity.SysLoginLog;
 import com.yc.admin.system.log.service.SysLoginLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -25,11 +23,11 @@ public class LoginLogEventListener {
 
     /**
      * 处理登录日志事件
+     * 使用@ApplicationModuleListener提供更好的模块化支持
+     * 自动包含@Async、@Transactional和@TransactionalEventListener功能
      * @param event 登录日志事件
      */
-    @EventListener(LoginLogEvent.class)
-    @Async
-    @Order
+    @ApplicationModuleListener
     public void handleLoginLogEvent(LoginLogEvent event) {
         try {
             log.debug("处理登录日志事件: 用户={}, 事件类型={}, IP={}", 
