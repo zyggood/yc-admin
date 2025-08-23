@@ -2,6 +2,9 @@ package com.yc.admin.system.log.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
@@ -13,6 +16,9 @@ import java.time.LocalDateTime;
  * @since 2024-01-01
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "登录日志查询条件")
 public class SysLoginLogDto {
 
@@ -37,8 +43,10 @@ public class SysLoginLogDto {
     private LocalDateTime endTime;
 
     @Schema(description = "页码", example = "1")
+    @Builder.Default
     private Integer pageNum = 1;
 
     @Schema(description = "每页大小", example = "10")
+    @Builder.Default
     private Integer pageSize = 10;
 }

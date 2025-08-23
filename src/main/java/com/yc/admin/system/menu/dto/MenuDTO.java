@@ -3,9 +3,11 @@ package com.yc.admin.system.menu.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -98,6 +100,7 @@ public class MenuDTO {
     private String parentName;
 
     @Schema(description = "子菜单列表")
+    @Builder.Default
     private List<MenuDTO> children = new ArrayList<>();
 
     @Schema(description = "是否有子菜单")
@@ -169,6 +172,9 @@ public class MenuDTO {
      * 菜单创建DTO
      */
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Schema(description = "菜单创建请求")
     public static class CreateDTO {
 
@@ -178,10 +184,12 @@ public class MenuDTO {
         private String menuName;
 
         @Schema(description = "父菜单ID，默认为0（顶级菜单）")
+        @Builder.Default
         private Long parentId = 0L;
 
         @Min(value = 0, message = "显示顺序不能小于0")
         @Schema(description = "显示顺序")
+        @Builder.Default
         private Integer orderNum = 0;
 
         @Size(max = 200, message = "路由地址长度不能超过200个字符")
@@ -197,9 +205,11 @@ public class MenuDTO {
         private String query;
 
         @Schema(description = "是否为外链（0否 1是）")
+        @Builder.Default
         private Integer isFrame = 0;
 
         @Schema(description = "是否缓存（0缓存 1不缓存）")
+        @Builder.Default
         private Integer isCache = 0;
 
         @NotBlank(message = "菜单类型不能为空")
@@ -208,9 +218,11 @@ public class MenuDTO {
         private String menuType;
 
         @Schema(description = "菜单状态（0显示 1隐藏）")
+        @Builder.Default
         private Integer visible = 0;
 
         @Schema(description = "菜单状态（0正常 1停用）")
+        @Builder.Default
         private Integer status = 0;
 
         @Size(max = 100, message = "权限标识长度不能超过100个字符")
@@ -230,6 +242,8 @@ public class MenuDTO {
      * 菜单更新DTO
      */
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     @Schema(description = "菜单更新请求")
     public static class UpdateDTO extends CreateDTO {
@@ -261,6 +275,7 @@ public class MenuDTO {
      * 批量删除DTO
      */
     @Data
+    @Builder
     @Schema(description = "批量删除请求")
     public static class BatchDeleteDTO {
 
@@ -269,6 +284,7 @@ public class MenuDTO {
         private List<Long> ids;
 
         @Schema(description = "是否强制删除（忽略子菜单检查）")
+        @Builder.Default
         private Boolean force = false;
     }
 
@@ -307,6 +323,7 @@ public class MenuDTO {
         private Boolean expanded;
 
         @Schema(description = "子节点列表")
+        @Builder.Default
         private List<TreeNodeDTO> children = new ArrayList<>();
 
         @Schema(description = "节点层级")

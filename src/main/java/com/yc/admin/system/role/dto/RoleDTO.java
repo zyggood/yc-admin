@@ -131,20 +131,25 @@ public class RoleDTO {
 
         @Min(value = 0, message = "显示顺序不能小于0")
         @Schema(description = "显示顺序")
+        @Builder.Default
         private Integer roleSort = 0;
 
         @Pattern(regexp = "^[1-5]$", message = "数据范围值不正确")
         @Schema(description = "数据范围：1=全部数据权限,2=自定数据权限,3=部门数据权限,4=部门及以下数据权限,5=仅本人数据权限")
+        @Builder.Default
         private String dataScope = "1";
 
         @Schema(description = "菜单树选择项是否关联显示")
+        @Builder.Default
         private Boolean menuCheckStrictly = true;
 
         @Schema(description = "部门树选择项是否关联显示")
+        @Builder.Default
         private Boolean deptCheckStrictly = true;
 
         @Pattern(regexp = "^[01]$", message = "状态值不正确")
         @Schema(description = "角色状态：0=正常,1=停用")
+        @Builder.Default
         private String status = "0";
 
         @Schema(description = "备注")
@@ -344,6 +349,7 @@ public class RoleDTO {
         private String roleKey;
 
         @Schema(description = "是否选中")
+        @Builder.Default
         private Boolean selected = false;
     }
 

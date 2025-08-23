@@ -3,6 +3,9 @@ package com.yc.admin.auth.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 
 /**
@@ -10,6 +13,9 @@ import lombok.Data;
  * @author yc
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "登录请求")
 public class LoginDTO {
 
@@ -30,5 +36,6 @@ public class LoginDTO {
     private String uuid;
 
     @Schema(description = "记住我", example = "true")
+    @Builder.Default
     private Boolean rememberMe = false;
 }

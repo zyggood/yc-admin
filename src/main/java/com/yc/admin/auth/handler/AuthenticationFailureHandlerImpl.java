@@ -2,7 +2,6 @@ package com.yc.admin.auth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yc.admin.common.core.Result;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

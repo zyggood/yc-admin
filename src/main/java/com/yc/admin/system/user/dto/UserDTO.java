@@ -158,6 +158,7 @@ public class UserDTO {
 
         @Pattern(regexp = "^[01]$", message = "状态值不正确")
         @Schema(description = "用户状态：0=正常,1=停用")
+        @Builder.Default
         private String status = "0";
 
         @Schema(description = "备注")
