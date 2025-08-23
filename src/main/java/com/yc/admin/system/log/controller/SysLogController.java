@@ -1,5 +1,6 @@
 package com.yc.admin.system.log.controller;
 
+import com.yc.admin.common.core.Result;
 import com.yc.admin.system.log.entity.SysLog;
 import com.yc.admin.system.log.service.SysLogService;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,9 @@ public class SysLogController {
     private final SysLogService sysLogService;
 
     @GetMapping("/page")
-    public Page<SysLog> page(PageRequest page, SysLog sysLog) {
-        return sysLogService.page(page);
+    public Result<Page<SysLog>> page(PageRequest page, SysLog sysLog) {
+        Page<SysLog> result = sysLogService.page(page);
+        return Result.success(result);
     }
 
 
