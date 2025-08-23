@@ -23,10 +23,10 @@ com.yc.admin/
 │   ├── dept/        # 部门管理
 │   ├── role/        # 角色管理
 │   ├── menu/        # 菜单管理
-│   └── permission/  # 权限管理
-├── auth/            # 认证授权模块
-├── monitor/         # 系统监控模块
-└── log/             # 日志管理模块
+│   ├── permission/  # 权限管理
+│   ├── log/         # 日志管理（操作日志、登录日志）
+│   └── monitor/     # 系统监控（在线用户、服务监控、缓存监控）
+└── auth/            # 认证授权模块
 ```
 
 ### 模块依赖关系 todo重新梳理
@@ -36,6 +36,7 @@ com.yc.admin/
 - system: 独立模块
 - monitor: 依赖 user
 - log: 独立模块
+- auth: 独立模块
 
 
 ## 开发阶段规划
@@ -46,69 +47,27 @@ com.yc.admin/
 - [x] 创建 Maven 项目结构
 - [x] 配置 pom.xml 依赖
 - [x] 创建 application.yml 配置文件
-  ```
-  AI提示词: 创建 src/main/resources/application.yml 配置文件，包含数据源配置、JPA配置、MyBatis配置、日志配置。使用环境变量占位符，支持dev/test/prod多环境配置。参考项目计划中的配置模板。
-  ```
 - [x] 配置数据库连接
-  ```
-  AI提示词: 在application.yml中配置数据库连接，包括连接池配置、事务配置。
-  ```
 - [x] 创建主启动类
-  ```
-  AI提示词: 在com.yc.admin包下创建AdminApplication主启动类，添加@SpringBootApplication注解，启用JPA和MyBatis扫描。添加@EnableScheduling支持定时任务。
-  ```
 
 #### 1.2 公共模块开发
 - [x] 创建统一返回结果类 Result<T>
-  ```
-  AI提示词: 在com.yc.admin.common.core包下创建Result<T>泛型类，包含code、message、data字段。提供success()、error()静态方法。实现序列化接口，添加构造方法和getter/setter。
-  ```
 - [x] 创建全局异常处理器
-  ```
-  AI提示词: 创建GlobalExceptionHandler类，使用@ControllerAdvice注解。处理业务异常、参数校验异常、系统异常。返回统一的Result格式，记录异常日志。
-  ```
 - [x] 创建基础实体类 BaseEntity
-  ```
-  AI提示词: 创建BaseEntity抽象类，包含id、createTime、updateTime、createBy、updateBy、delFlag字段。使用JPA注解@MappedSuperclass，添加Lombok注解。配置自动填充策略。
-  ```
 
 #### 1.3 数据库设计
 - [x] 设计用户表 (sys_user)
-  ```
-  AI提示词: 创建sys_user表，包含user_id(主键)、user_name、nick_name、email、phone、sex、avatar、password、status、del_flag、create_by、create_time、update_by、update_time、remark字段。设置合适的索引和约束。
-  ```
 - [x] 设计部门表 (sys_dept)
-  ```
-  AI提示词: 创建sys_dept表，包含dept_id(主键)、parent_id、ancestors、dept_name、order_num、leader、phone、email、status、del_flag等字段。支持树形结构，ancestors字段存储祖级列表。
-  ```
 - [x] 设计角色表 (sys_role)
-  ```
-  AI提示词: 创建sys_role表，包含role_id(主键)、role_name、role_key、role_sort、data_scope、menu_check_strictly、dept_check_strictly、status、del_flag等字段。data_scope字段控制数据权限范围。
-  ```
 - [x] 设计菜单表 (sys_menu)
-  ```
-  AI提示词: 创建sys_menu表，包含menu_id(主键)、menu_name、parent_id、order_num、path、component、query、is_frame、is_cache、menu_type、visible、status、perms、icon等字段。支持菜单和按钮权限。
-  ```
 - [x] 设计用户角色关联表 (sys_user_role)
-  ```
-  AI提示词: 创建sys_user_role关联表，包含user_id、role_id字段作为联合主键。建立外键约束关联sys_user和sys_role表。
-  ```
 - [x] 设计角色菜单关联表 (sys_role_menu)
-  ```
-  AI提示词: 创建sys_role_menu关联表，包含role_id、menu_id字段作为联合主键。建立外键约束关联sys_role和sys_menu表。
-  ```
 - [x] 设计字典表 (sys_dict_type, sys_dict_data)
-  ```
-  AI提示词: 创建sys_dict_type字典类型表和sys_dict_data字典数据表。type表包含dict_id、dict_name、dict_type、status等字段；data表包含dict_code、dict_sort、dict_label、dict_value、dict_type等字段。
-  ```
 - [ ] 设计参数表 (sys_config)
   ```
   AI提示词: 创建sys_config参数配置表，包含config_id(主键)、config_name、config_key、config_value、config_type、create_by、create_time、update_by、update_time、remark字段。
   ```
 - [x] 设计日志表 (sys_oper_log, sys_login_info)
-  ```
-  AI提示词: 创建sys_oper_log操作日志表，包含oper_id、title、business_type、method、request_method、operator_type、oper_name、dept_name、oper_url、oper_ip、oper_location、oper_param、json_result、status、error_msg、oper_time字段。创建sys_logininfor登录日志表，包含info_id、user_name、ipaddr、login_location、browser、os、status、msg、login_time字段。
-  ```
 
 ### 第二阶段：核心功能开发
 
@@ -402,7 +361,7 @@ monitor/
 
 ### 第五阶段：优化与测试
 
-#### 5.1 性能优化
+#### 5.2 性能优化
 - [ ] 数据库查询优化
   ```
   AI提示词: 分析慢SQL查询，优化数据库索引设计。使用explain分析查询执行计划，优化复杂查询语句。实现分页查询优化，避免深度分页问题。配置数据库连接池参数，提高并发性能。
@@ -420,7 +379,7 @@ monitor/
   AI提示词: 实现静态资源压缩和合并，减少HTTP请求数量。配置CDN加速，提高资源加载速度。实现懒加载和虚拟滚动，优化大数据量展示。优化图片资源，使用WebP格式。
   ```
 
-#### 5.2 测试
+#### 5.1 测试
 - [ ] 单元测试编写
   ```
   AI提示词: 为每个Service类编写单元测试，使用JUnit 5和Mockito。测试覆盖正常流程、异常流程、边界条件。使用@MockBean模拟外部依赖。配置测试数据库，使用@Transactional回滚测试数据。
@@ -476,7 +435,7 @@ monitor/
 - 生成代码时遵循 DDD 分层架构
 - 实体类使用 JPA 注解和 Lombok
 - 控制器使用 RESTful 风格
-- 服务类使用事务注解
+- 服务类按需使用事务注解，避免过度使用
 
 ### 3. 数据库操作
 - 简单查询使用 JPA Repository
