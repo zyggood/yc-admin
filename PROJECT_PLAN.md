@@ -71,18 +71,6 @@ com.yc.admin/
   ```
   AI提示词: 创建BaseEntity抽象类，包含id、createTime、updateTime、createBy、updateBy、delFlag字段。使用JPA注解@MappedSuperclass，添加Lombok注解。配置自动填充策略。
   ```
-- [ ] 创建分页查询工具类 TODO 分页查询工具类是否有必要？ 直接使用 Spring Data的Pageable和Page ？
-  ```
-  AI提示词: 创建PageUtils工具类，封装Spring Data的Pageable和Page。提供构建分页参数、转换分页结果的方法。支持排序参数处理。
-  ```
-- [ ] 创建常用工具类（日期、字符串、加密等）
-  ```
-  AI提示词: 创建DateUtils、StringUtils、PasswordUtils、SecurityUtils等工具类。DateUtils提供日期格式化、解析方法；PasswordUtils提供BCrypt加密；SecurityUtils提供当前用户信息获取。
-  ```
-- [ ] 创建统一常量类
-  ```
-  AI提示词: 创建Constants类定义系统常量，包括用户状态、删除标志、数据权限范围等。创建HttpStatus类定义响应状态码。使用public static final修饰。
-  ```
 
 #### 1.3 数据库设计
 - [x] 设计用户表 (sys_user)
@@ -93,7 +81,7 @@ com.yc.admin/
   ```
   AI提示词: 创建sys_dept表，包含dept_id(主键)、parent_id、ancestors、dept_name、order_num、leader、phone、email、status、del_flag等字段。支持树形结构，ancestors字段存储祖级列表。
   ```
-- [x 设计角色表 (sys_role)
+- [x] 设计角色表 (sys_role)
   ```
   AI提示词: 创建sys_role表，包含role_id(主键)、role_name、role_key、role_sort、data_scope、menu_check_strictly、dept_check_strictly、status、del_flag等字段。data_scope字段控制数据权限范围。
   ```
@@ -117,7 +105,7 @@ com.yc.admin/
   ```
   AI提示词: 创建sys_config参数配置表，包含config_id(主键)、config_name、config_key、config_value、config_type、create_by、create_time、update_by、update_time、remark字段。
   ```
-- [ ] 设计日志表 (sys_oper_log, sys_login_info)
+- [x] 设计日志表 (sys_oper_log, sys_login_info)
   ```
   AI提示词: 创建sys_oper_log操作日志表，包含oper_id、title、business_type、method、request_method、operator_type、oper_name、dept_name、oper_url、oper_ip、oper_location、oper_param、json_result、status、error_msg、oper_time字段。创建sys_logininfor登录日志表，包含info_id、user_name、ipaddr、login_location、browser、os、status、msg、login_time字段。
   ```
