@@ -1,7 +1,5 @@
 package com.yc.admin.auth.config;
 
-import com.yc.admin.auth.handler.AuthenticationFailureHandlerImpl;
-import com.yc.admin.auth.handler.AuthenticationSuccessHandlerImpl;
 import com.yc.admin.auth.handler.LogoutSuccessHandlerImpl;
 import com.yc.admin.auth.filter.JwtAuthenticationTokenFilter;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +37,6 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
-    private final AuthenticationSuccessHandlerImpl authenticationSuccessHandler;
-    private final AuthenticationFailureHandlerImpl authenticationFailureHandler;
     private final LogoutSuccessHandlerImpl logoutSuccessHandler;
 
     /**
