@@ -1,12 +1,12 @@
 package com.yc.admin.system.role.controller;
 
+import com.yc.admin.common.core.Result;
 import com.yc.admin.system.role.entity.Role;
 import com.yc.admin.system.role.dto.RoleDTO;
 import com.yc.admin.system.role.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -40,7 +40,7 @@ public class RoleController {
      * @return 角色分页列表
      */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getRoles(
+    public Result<Map<String, Object>> getRoles(
             @RequestParam(required = false) String roleName,
             @RequestParam(required = false) String roleKey,
             @RequestParam(required = false) String status,
@@ -51,21 +51,16 @@ public class RoleController {
             Page<RoleDTO> rolePage = roleService.findByConditions(roleName, roleKey, status, page, size);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "查询成功");
             response.put("data", rolePage.getContent());
             response.put("total", rolePage.getTotalElements());
             response.put("totalPages", rolePage.getTotalPages());
             response.put("currentPage", page);
             response.put("pageSize", size);
             
-            return ResponseEntity.ok(response);
+            return Result.success("查询成功", response);
         } catch (Exception e) {
             log.error("查询角色列表失败", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("查询失败: " + e.getMessage());
         }
     }
 
@@ -75,22 +70,13 @@ public class RoleController {
      * @return 角色详情
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getRoleById(@PathVariable Long id) {
+    public Result<RoleDTO> getRoleById(@PathVariable Long id) {
         try {
             RoleDTO role = roleService.findById(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "查询成功");
-            response.put("data", role);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("查询成功", role);
         } catch (Exception e) {
             log.error("查询角色详情失败: ID={}", id, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("查询失败: " + e.getMessage());
         }
     }
 
@@ -99,22 +85,13 @@ public class RoleController {
      * @return 角色列表
      */
     @GetMapping("/select")
-    public ResponseEntity<Map<String, Object>> getRolesForSelect() {
+    public Result<List<RoleDTO.SelectorDTO>> getRolesForSelect() {
         try {
             List<RoleDTO.SelectorDTO> roles = roleService.findAllForSelect();
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "查询成功");
-            response.put("data", roles);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("查询成功", roles);
         } catch (Exception e) {
             log.error("查询角色下拉列表失败", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("查询失败: " + e.getMessage());
         }
     }
 
@@ -123,7 +100,7 @@ public class RoleController {
      * @return 统计信息
      */
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getRoleStats() {
+    public Result<Map<String, Object>> getRoleStats() {
         try {
             long totalRoles = roleService.findAll().size();
             long normalRoles = roleService.countNormalRoles();
@@ -133,18 +110,10 @@ public class RoleController {
             stats.put("normalRoles", normalRoles);
             stats.put("disabledRoles", totalRoles - normalRoles);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "查询成功");
-            response.put("data", stats);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("查询成功", stats);
         } catch (Exception e) {
             log.error("查询角色统计信息失败", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("查询失败: " + e.getMessage());
         }
     }
 
@@ -156,22 +125,13 @@ public class RoleController {
      * @return 创建结果
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createRole(@Valid @RequestBody RoleDTO.CreateDTO createDTO) {
+    public Result<RoleDTO> createRole(@Valid @RequestBody RoleDTO.CreateDTO createDTO) {
         try {
             RoleDTO createdRole = roleService.createRole(createDTO);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "角色创建成功");
-            response.put("data", createdRole);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("角色创建成功", createdRole);
         } catch (Exception e) {
             log.error("创建角色失败: {}", createDTO.getRoleName(), e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "创建失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("创建失败: " + e.getMessage());
         }
     }
 
@@ -182,22 +142,13 @@ public class RoleController {
      * @return 更新结果
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateRole(@PathVariable Long id, @Valid @RequestBody RoleDTO.UpdateDTO updateDTO) {
+    public Result<RoleDTO> updateRole(@PathVariable Long id, @Valid @RequestBody RoleDTO.UpdateDTO updateDTO) {
         try {
             RoleDTO updatedRole = roleService.updateRole(updateDTO);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "角色更新成功");
-            response.put("data", updatedRole);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("角色更新成功", updatedRole);
         } catch (Exception e) {
             log.error("更新角色失败: ID={}", id, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "更新失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("更新失败: " + e.getMessage());
         }
     }
 
@@ -209,21 +160,13 @@ public class RoleController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteRole(@PathVariable Long id) {
+    public Result<Void> deleteRole(@PathVariable Long id) {
         try {
             roleService.deleteRole(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "角色删除成功");
-            
-            return ResponseEntity.ok(response);
+            return Result.success("角色删除成功");
         } catch (Exception e) {
             log.error("删除角色失败: ID={}", id, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "删除失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("删除失败: " + e.getMessage());
         }
     }
 
@@ -233,21 +176,13 @@ public class RoleController {
      * @return 删除结果
      */
     @DeleteMapping("/batch")
-    public ResponseEntity<Map<String, Object>> deleteRoles(@RequestBody List<Long> ids) {
+    public Result<Void> deleteRoles(@RequestBody List<Long> ids) {
         try {
             roleService.deleteRoles(ids);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "批量删除成功");
-            
-            return ResponseEntity.ok(response);
+            return Result.success("批量删除成功");
         } catch (Exception e) {
             log.error("批量删除角色失败: IDs={}", ids, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "批量删除失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("批量删除失败: " + e.getMessage());
         }
     }
 
@@ -259,21 +194,13 @@ public class RoleController {
      * @return 操作结果
      */
     @PutMapping("/{id}/enable")
-    public ResponseEntity<Map<String, Object>> enableRole(@PathVariable Long id) {
+    public Result<Void> enableRole(@PathVariable Long id) {
         try {
             roleService.enableRole(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "角色启用成功");
-            
-            return ResponseEntity.ok(response);
+            return Result.success("角色启用成功");
         } catch (Exception e) {
             log.error("启用角色失败: ID={}", id, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "启用失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("启用失败: " + e.getMessage());
         }
     }
 
@@ -283,21 +210,13 @@ public class RoleController {
      * @return 操作结果
      */
     @PutMapping("/{id}/disable")
-    public ResponseEntity<Map<String, Object>> disableRole(@PathVariable Long id) {
+    public Result<Void> disableRole(@PathVariable Long id) {
         try {
             roleService.disableRole(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "角色停用成功");
-            
-            return ResponseEntity.ok(response);
+            return Result.success("角色停用成功");
         } catch (Exception e) {
             log.error("停用角色失败: ID={}", id, e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "停用失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("停用失败: " + e.getMessage());
         }
     }
 
@@ -308,7 +227,7 @@ public class RoleController {
      * @return 数据权限范围选项
      */
     @GetMapping("/data-scopes")
-    public ResponseEntity<Map<String, Object>> getDataScopes() {
+    public Result<Map<String, String>> getDataScopes() {
         try {
             Map<String, String> dataScopes = new HashMap<>();
             dataScopes.put(Role.DataScope.ALL, "全部数据权限");
@@ -317,18 +236,10 @@ public class RoleController {
             dataScopes.put(Role.DataScope.DEPT_AND_CHILD, "本部门及以下数据权限");
             dataScopes.put(Role.DataScope.SELF, "仅本人数据权限");
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "查询成功");
-            response.put("data", dataScopes);
-            
-            return ResponseEntity.ok(response);
+            return Result.success("查询成功", dataScopes);
         } catch (Exception e) {
             log.error("查询数据权限范围选项失败", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Result.error("查询失败: " + e.getMessage());
         }
     }
 }
