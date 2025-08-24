@@ -1,6 +1,5 @@
 package com.yc.admin.system.dict.service;
 
-import com.yc.admin.AdminApplication;
 import com.yc.admin.system.dict.dto.DictDto;
 import com.yc.admin.system.dict.dto.DictDtoConverter;
 import com.yc.admin.system.dict.entity.Dict;
@@ -9,14 +8,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,15 +31,14 @@ import static org.mockito.Mockito.*;
  * 测试字典服务的各种操作
  * @author yc
  */
-@SpringBootTest
-@ContextConfiguration(classes = AdminApplication.class)
-@Transactional
+@ExtendWith(MockitoExtension.class)
 @DisplayName("字典服务测试")
 class DictServiceTest {
 
-    @MockBean
+    @Mock
     private DictRepository dictRepository;
 
+    @InjectMocks
     private DictService dictService;
 
     private Dict testDict;
@@ -50,8 +48,6 @@ class DictServiceTest {
 
     @BeforeEach
     void setUp() {
-        dictService = new DictService(dictRepository);
-        
         // 准备测试数据
         testDict = new Dict();
         testDict.setId(1L);

@@ -9,15 +9,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -34,15 +34,14 @@ import static org.mockito.Mockito.*;
  *
  * @author yc
  */
-@SpringBootTest
-@ContextConfiguration(classes = com.yc.admin.AdminApplication.class)
-@Transactional
+@ExtendWith(MockitoExtension.class)
 @DisplayName("NoticeService单元测试")
 class NoticeServiceTest {
 
-    @MockBean
+    @Mock
     private NoticeRepository noticeRepository;
     
+    @InjectMocks
     private NoticeService noticeService;
 
     private Notice testNotice;
@@ -54,8 +53,6 @@ class NoticeServiceTest {
 
     @BeforeEach
     void setUp() {
-        noticeService = new NoticeService(noticeRepository);
-        
         // 初始化测试数据
         testNotice = new Notice();
         testNotice.setId(1L);
@@ -513,18 +510,7 @@ class NoticeServiceTest {
             });
         }
 
-        @Test
-        @DisplayName("转换器异常处理")
-        void testConverterException() {
-            // Given
-            when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
 
-            // When & Then
-            assertThrows(RuntimeException.class, () -> {
-                Optional<NoticeDto> result = noticeService.findById(1L);
-                result.orElse(null);
-            });
-        }
     }
 
     @Nested

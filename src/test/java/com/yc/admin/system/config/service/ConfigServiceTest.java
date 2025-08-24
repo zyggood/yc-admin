@@ -8,14 +8,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
-import com.yc.admin.AdminApplication;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -30,15 +29,14 @@ import static org.mockito.Mockito.*;
  * @author YC
  * @since 1.0.0
  */
-@SpringBootTest
-@ContextConfiguration(classes = AdminApplication.class)
-@Transactional
+@ExtendWith(MockitoExtension.class)
 @DisplayName("ConfigService 单元测试")
 class ConfigServiceTest {
 
-    @MockBean
+    @Mock
     private ConfigRepository configRepository;
 
+    @InjectMocks
     private ConfigService configService;
 
     private Config testConfig;
@@ -50,8 +48,6 @@ class ConfigServiceTest {
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigService(configRepository);
-        
         // 测试数据
         testConfig = new Config();
         testConfig.setId(1L);

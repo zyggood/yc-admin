@@ -1,16 +1,15 @@
 package com.yc.admin.system.dept.service;
 
-import com.yc.admin.AdminApplication;
 import com.yc.admin.common.exception.BusinessException;
 import com.yc.admin.system.dept.entity.Dept;
 import com.yc.admin.system.dept.repository.DeptRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
 
@@ -25,14 +24,13 @@ import static org.mockito.Mockito.*;
  * @author admin
  * @since 2025-01-01
  */
-@SpringBootTest
-@ContextConfiguration(classes = AdminApplication.class)
-@Transactional
+@ExtendWith(MockitoExtension.class)
 class DeptServiceTest {
 
-    @MockBean
+    @Mock
     private DeptRepository deptRepository;
 
+    @InjectMocks
     private DeptService deptService;
 
     private Dept rootDept;
@@ -42,8 +40,6 @@ class DeptServiceTest {
 
     @BeforeEach
     void setUp() {
-        deptService = new DeptService(deptRepository);
-        
         // 创建测试数据
         rootDept = createDept(1L, 0L, "总公司", "0", 0, 0);
         childDept1 = createDept(2L, 1L, "技术部", "0,1", 1, 0);
