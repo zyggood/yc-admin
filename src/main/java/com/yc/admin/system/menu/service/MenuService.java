@@ -154,7 +154,7 @@ public class MenuService {
      */
     public List<MenuDTO.TreeNodeDTO> buildMenuTree() {
         List<Menu> allMenus = menuRepository.findByDelFlagOrderByOrderNumAsc(0);
-        return MenuDTOConverter.toTreeNodeDTOList(allMenus);
+        return buildMenuTreeFromList(allMenus, 0L);
     }
 
     /**
@@ -164,7 +164,34 @@ public class MenuService {
      * @return 菜单树列表
      */
     public List<MenuDTO.TreeNodeDTO> buildMenuTree(List<Menu> menus, Long parentId) {
-        return MenuDTOConverter.toTreeNodeDTOList(menus);
+        return buildMenuTreeFromList(menus, parentId);
+    }
+
+    /**
+     * 从菜单列表构建树形结构
+     * @param menus 菜单列表
+     * @param parentId 父菜单ID
+     * @return 菜单树列表
+     */
+    private List<MenuDTO.TreeNodeDTO> buildMenuTreeFromList(List<Menu> menus, Long parentId) {
+        if (menus == null || menus.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return menus.stream()
+                .filter(menu -> Objects.equals(menu.getParentId(), parentId))
+                .map(menu -> {
+                    MenuDTO.TreeNodeDTO node = MenuDTOConverter.toTreeNodeDTO(menu);
+                    // 递归构建子节点，防止无限递归
+                    if (menu.getId() != null && !Objects.equals(menu.getId(), parentId)) {
+                        List<MenuDTO.TreeNodeDTO> children = buildMenuTreeFromList(menus, menu.getId());
+                        node.setChildren(children);
+                    } else {
+                        node.setChildren(new ArrayList<>());
+                    }
+                    return node;
+                })
+                .collect(Collectors.toList());
     }
 
     /**

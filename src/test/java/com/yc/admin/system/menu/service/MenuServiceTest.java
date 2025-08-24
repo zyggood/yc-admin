@@ -498,7 +498,7 @@ class MenuServiceTest {
             // When & Then
             assertThatThrownBy(() -> menuService.deleteMenu(null))
                     .isInstanceOf(BusinessException.class)
-                    .hasMessageContaining("菜单ID不能为空");
+                    .hasMessageContaining("菜单不存在: null");
         }
 
         @Test
@@ -551,6 +551,7 @@ class MenuServiceTest {
                     .menuName("父菜单")
                     .parentId(0L)
                     .orderNum(1)
+                    .status(0)
                     .menuType("M")
                     .build();
             parentMenu.setId(1L);
@@ -559,6 +560,7 @@ class MenuServiceTest {
                     .menuName("子菜单")
                     .parentId(1L)
                     .orderNum(1)
+                    .status(0)
                     .menuType("C")
                     .build();
             childMenu.setId(2L);
@@ -613,11 +615,11 @@ class MenuServiceTest {
         @DisplayName("构建菜单树 - 多层级")
         void testBuildMenuTree_MultiLevel() {
             // Given
-            Menu level1 = Menu.builder().menuName("一级菜单").parentId(0L).build();
+            Menu level1 = Menu.builder().menuName("一级菜单").status(0).menuType("C").parentId(0L).build();
             level1.setId(1L);
-            Menu level2 = Menu.builder().menuName("二级菜单").parentId(1L).build();
+            Menu level2 = Menu.builder().menuName("二级菜单").status(0).menuType("C").parentId(1L).build();
             level2.setId(2L);
-            Menu level3 = Menu.builder().menuName("三级菜单").parentId(2L).build();
+            Menu level3 = Menu.builder().menuName("三级菜单").status(0).menuType("C").parentId(2L).build();
             level3.setId(3L);
 
             List<Menu> menuList = Arrays.asList(level1, level2, level3);
@@ -753,6 +755,8 @@ class MenuServiceTest {
                 Menu menu = Menu.builder()
                         .menuName("菜单" + i)
                         .parentId(i == 0 ? 0L : (long)(i / 10))
+                        .status(0)
+                        .menuType("M")
                         .build();
                 menu.setId((long) i);
                 largeMenuList.add(menu);

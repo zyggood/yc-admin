@@ -174,7 +174,7 @@ public class MenuDTOConverter {
                 .orderNum(menu.getOrderNum())
                 .path(menu.getPath())
                 .icon(menu.getIcon())
-                .disabled(menu.getStatus() == 1)
+                .disabled(menu.getStatus() != null && menu.getStatus() == 1)
                 .type(menu.getMenuType())
                 .isLeaf(menu.getMenuType().equals("F"))
                 .build();
