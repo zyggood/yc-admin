@@ -1,6 +1,7 @@
 package com.yc.admin.system.role.dto;
 
 import com.yc.admin.system.role.entity.Role;
+import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
  * @author YC
  * @since 1.0.0
  */
-@Component
+@UtilityClass
 public class RoleDTOConverter {
 
     /**
@@ -116,7 +117,7 @@ public class RoleDTOConverter {
         }
         
         return roles.stream()
-                .map(this::toDTO)
+                .map(RoleDTOConverter::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -129,7 +130,7 @@ public class RoleDTOConverter {
         }
         
         List<RoleDTO> dtoList = rolePage.getContent().stream()
-                .map(this::toDTO)
+                .map(RoleDTOConverter::toDTO)
                 .collect(Collectors.toList());
         
         return new PageImpl<>(dtoList, rolePage.getPageable(), rolePage.getTotalElements());
@@ -196,7 +197,7 @@ public class RoleDTOConverter {
         }
         
         return roles.stream()
-                .map(this::toSelectorDTO)
+                .map(RoleDTOConverter::toSelectorDTO)
                 .collect(Collectors.toList());
     }
 
@@ -209,7 +210,7 @@ public class RoleDTOConverter {
         }
         
         return roles.stream()
-                .map(this::toExportDTO)
+                .map(RoleDTOConverter::toExportDTO)
                 .collect(Collectors.toList());
     }
 }

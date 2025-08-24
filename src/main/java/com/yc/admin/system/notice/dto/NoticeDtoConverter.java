@@ -1,6 +1,7 @@
 package com.yc.admin.system.notice.dto;
 
 import com.yc.admin.system.notice.entity.Notice;
+import lombok.experimental.UtilityClass;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
  *
  * @author yc
  */
-@Component
+@UtilityClass
 public class NoticeDtoConverter {
 
     /**
@@ -52,7 +53,7 @@ public class NoticeDtoConverter {
         }
 
         return notices.stream()
-                .map(this::toDto)
+                .map(NoticeDtoConverter::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -144,7 +145,7 @@ public class NoticeDtoConverter {
         }
 
         return notices.stream()
-                .map(this::toSimpleDto)
+                .map(NoticeDtoConverter::toSimpleDto)
                 .collect(Collectors.toList());
     }
 }

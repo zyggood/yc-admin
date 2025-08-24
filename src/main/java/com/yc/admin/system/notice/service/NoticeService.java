@@ -31,7 +31,6 @@ import java.util.Optional;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
-    private final NoticeDtoConverter noticeDtoConverter;
 
     /**
      * 分页查询公告列表
@@ -43,7 +42,7 @@ public class NoticeService {
     public Page<NoticeDto> findPage(NoticeDto.Query queryDto, Pageable pageable) {
         Specification<Notice> spec = buildSpecification(queryDto);
         Page<Notice> noticePage = noticeRepository.findAll(spec, pageable);
-        return noticePage.map(noticeDtoConverter::toDto);
+        return noticePage.map(NoticeDtoConverter::toDto);
     }
 
     /**
@@ -54,7 +53,7 @@ public class NoticeService {
      */
     public Page<NoticeDto> findPublishedNotices(Pageable pageable) {
         Page<Notice> noticePage = noticeRepository.findPublishedNotices(Notice.Status.PUBLISHED, pageable);
-        return noticePage.map(noticeDtoConverter::toSimpleDto);
+        return noticePage.map(NoticeDtoConverter::toSimpleDto);
     }
 
     /**
@@ -65,7 +64,7 @@ public class NoticeService {
      */
     public Optional<NoticeDto> findById(Long id) {
         return noticeRepository.findByIdAndNotDeleted(id)
-                .map(noticeDtoConverter::toDto);
+                .map(NoticeDtoConverter::toDto);
     }
 
     /**
@@ -84,11 +83,11 @@ public class NoticeService {
         }
         
         // 转换并保存
-        Notice notice = noticeDtoConverter.toEntity(createDto);
+        Notice notice = NoticeDtoConverter.toEntity(createDto);
         Notice savedNotice = noticeRepository.save(notice);
         
         log.info("公告创建成功，ID: {}", savedNotice.getId());
-        return noticeDtoConverter.toDto(savedNotice);
+        return NoticeDtoConverter.toDto(savedNotice);
     }
 
     /**
@@ -111,11 +110,11 @@ public class NoticeService {
         }
         
         // 更新实体
-        Notice updatedNotice = noticeDtoConverter.updateEntity(updateDto, existingNotice);
+        Notice updatedNotice = NoticeDtoConverter.updateEntity(updateDto, existingNotice);
         Notice savedNotice = noticeRepository.save(updatedNotice);
         
         log.info("公告更新成功，ID: {}", savedNotice.getId());
-        return noticeDtoConverter.toDto(savedNotice);
+        return NoticeDtoConverter.toDto(savedNotice);
     }
 
     /**
@@ -136,12 +135,12 @@ public class NoticeService {
         validateStatusTransition(existingNotice.getStatus(), statusUpdateDto.getStatus());
         
         // 更新状态
-        Notice updatedNotice = noticeDtoConverter.updateStatus(statusUpdateDto, existingNotice);
+        Notice updatedNotice = NoticeDtoConverter.updateStatus(statusUpdateDto, existingNotice);
         Notice savedNotice = noticeRepository.save(updatedNotice);
         
         log.info("公告状态更新成功，ID: {}, 状态: {} -> {}", 
                 savedNotice.getId(), existingNotice.getStatus(), savedNotice.getStatus());
-        return noticeDtoConverter.toDto(savedNotice);
+        return NoticeDtoConverter.toDto(savedNotice);
     }
 
     /**
@@ -226,7 +225,7 @@ public class NoticeService {
         Notice savedNotice = noticeRepository.save(notice);
         
         log.info("公告发布成功，ID: {}", savedNotice.getId());
-        return noticeDtoConverter.toDto(savedNotice);
+        return NoticeDtoConverter.toDto(savedNotice);
     }
 
     /**
@@ -251,7 +250,7 @@ public class NoticeService {
         Notice savedNotice = noticeRepository.save(notice);
         
         log.info("公告关闭成功，ID: {}", savedNotice.getId());
-        return noticeDtoConverter.toDto(savedNotice);
+        return NoticeDtoConverter.toDto(savedNotice);
     }
 
     /**

@@ -31,7 +31,6 @@ import java.util.Optional;
 public class RoleService {
 
     private final RoleRepository roleRepository;
-    private final RoleDTOConverter roleDTOConverter;
 
     // ==================== 查询方法 ====================
 
@@ -47,7 +46,7 @@ public class RoleService {
         Role role = roleRepository.findById(id)
                 .filter(r -> r.getDelFlag() == 0)
                 .orElseThrow(() -> new BusinessException("角色不存在: " + id));
-        return roleDTOConverter.toDTO(role);
+        return RoleDTOConverter.toDTO(role);
     }
 
     /**
@@ -72,7 +71,7 @@ public class RoleService {
             return Optional.empty();
         }
         return roleRepository.findByRoleKeyAndDelFlag(roleKey, 0)
-                .map(roleDTOConverter::toDTO);
+                .map(RoleDTOConverter::toDTO);
     }
 
     /**
@@ -85,7 +84,7 @@ public class RoleService {
             return Optional.empty();
         }
         return roleRepository.findByRoleNameAndDelFlag(roleName, 0)
-                .map(roleDTOConverter::toDTO);
+                .map(RoleDTOConverter::toDTO);
     }
 
     /**
@@ -94,7 +93,7 @@ public class RoleService {
      */
     public List<RoleDTO> findAll() {
         List<Role> roles = roleRepository.findByDelFlagOrderByRoleSortAsc(0);
-        return roleDTOConverter.toDTOList(roles);
+        return RoleDTOConverter.toDTOList(roles);
     }
 
     /**
@@ -109,7 +108,7 @@ public class RoleService {
         } else {
             roles = roleRepository.findAllForSelect(status, 0);
         }
-        return roleDTOConverter.toDTOList(roles);
+        return RoleDTOConverter.toDTOList(roles);
     }
 
     /**
@@ -121,7 +120,7 @@ public class RoleService {
     public Page<RoleDTO> findAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Role> rolePage = roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable);
-        return roleDTOConverter.toDTOPage(rolePage);
+        return RoleDTOConverter.toDTOPage(rolePage);
     }
 
     /**
@@ -142,7 +141,7 @@ public class RoleService {
             0,
             pageable
         );
-        return roleDTOConverter.toDTOPage(rolePage);
+        return RoleDTOConverter.toDTOPage(rolePage);
     }
 
     /**
@@ -159,7 +158,7 @@ public class RoleService {
      */
     public List<RoleDTO.SelectorDTO> findAllForSelect() {
         List<Role> roles = roleRepository.findAllForSelect(Role.Status.NORMAL, 0);
-        return roleDTOConverter.toSelectorDTOList(roles);
+        return RoleDTOConverter.toSelectorDTOList(roles);
     }
 
     // ==================== 创建和更新方法 ====================
@@ -187,7 +186,7 @@ public class RoleService {
         }
         
         // 转换为实体
-        Role role = roleDTOConverter.toEntity(createDTO);
+        Role role = RoleDTOConverter.toEntity(createDTO);
         
         // 设置默认值
         if (role.getRoleSort() == null) {
@@ -213,7 +212,7 @@ public class RoleService {
         Role savedRole = roleRepository.save(role);
         log.info("角色创建成功: ID={}, 名称={}", savedRole.getId(), savedRole.getRoleName());
         
-        return roleDTOConverter.toDTO(savedRole);
+        return RoleDTOConverter.toDTO(savedRole);
     }
 
     /**
@@ -244,13 +243,13 @@ public class RoleService {
         }
         
         // 更新实体
-        roleDTOConverter.updateEntity(existingRole, updateDTO);
+        RoleDTOConverter.updateEntity(existingRole, updateDTO);
         existingRole.setUpdateTime(LocalDateTime.now());
         
         Role savedRole = roleRepository.save(existingRole);
         log.info("角色更新成功: ID={}, 名称={}", savedRole.getId(), savedRole.getRoleName());
         
-        return roleDTOConverter.toDTO(savedRole);
+        return RoleDTOConverter.toDTO(savedRole);
     }
 
     // ==================== 删除方法 ====================

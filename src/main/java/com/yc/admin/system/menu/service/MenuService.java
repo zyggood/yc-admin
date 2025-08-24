@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 public class MenuService {
 
     private final MenuRepository menuRepository;
-    private final MenuDTOConverter menuDTOConverter;
 
     // ==================== 查询方法 ====================
 
@@ -49,7 +48,7 @@ public class MenuService {
         Menu menu = menuRepository.findById(id)
                 .filter(m -> m.getDelFlag() == 0)
                 .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
-        return menuDTOConverter.toDTO(menu);
+        return MenuDTOConverter.toDTO(menu);
     }
 
     /**
@@ -75,7 +74,7 @@ public class MenuService {
             return Optional.empty();
         }
         return menuRepository.findByPermsAndDelFlag(perms, 0)
-                .map(menuDTOConverter::toDTO);
+                .map(MenuDTOConverter::toDTO);
     }
 
     /**
@@ -84,7 +83,7 @@ public class MenuService {
      */
     public List<MenuDTO> findAll() {
         List<Menu> menus = menuRepository.findByDelFlagOrderByOrderNumAsc(0);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -97,7 +96,7 @@ public class MenuService {
             parentId = Menu.TOP_PARENT_ID;
         }
         List<Menu> menus = menuRepository.findByParentIdAndDelFlagOrderByOrderNumAsc(parentId, 0);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -110,7 +109,7 @@ public class MenuService {
             return Collections.emptyList();
         }
         List<Menu> menus = menuRepository.findByMenuTypeAndDelFlagOrderByOrderNumAsc(menuType, 0);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -123,7 +122,7 @@ public class MenuService {
             return Collections.emptyList();
         }
         List<Menu> menus = menuRepository.findByStatusAndDelFlagOrderByOrderNumAsc(status, 0);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -146,7 +145,7 @@ public class MenuService {
             0,
             pageable
         );
-        return menuDTOConverter.toDTOPage(menuPage);
+        return MenuDTOConverter.toDTOPage(menuPage);
     }
 
     /**
@@ -155,7 +154,7 @@ public class MenuService {
      */
     public List<MenuDTO.TreeNodeDTO> buildMenuTree() {
         List<Menu> allMenus = menuRepository.findByDelFlagOrderByOrderNumAsc(0);
-        return menuDTOConverter.toTreeNodeDTOList(allMenus);
+        return MenuDTOConverter.toTreeNodeDTOList(allMenus);
     }
 
     /**
@@ -165,7 +164,7 @@ public class MenuService {
      * @return 菜单树列表
      */
     public List<MenuDTO.TreeNodeDTO> buildMenuTree(List<Menu> menus, Long parentId) {
-        return menuDTOConverter.toTreeNodeDTOList(menus);
+        return MenuDTOConverter.toTreeNodeDTOList(menus);
     }
 
     /**
@@ -234,7 +233,7 @@ public class MenuService {
             return Collections.emptyList();
         }
         List<Menu> menus = menuRepository.findByUserId(userId);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     /**
@@ -265,7 +264,7 @@ public class MenuService {
             return Collections.emptyList();
         }
         List<Menu> menus = menuRepository.findByRoleId(roleId);
-        return menuDTOConverter.toDTOList(menus);
+        return MenuDTOConverter.toDTOList(menus);
     }
 
     // ==================== 创建和更新方法 ====================
@@ -280,7 +279,7 @@ public class MenuService {
         validateMenuForCreate(createDTO);
         
         // 转换为实体
-        Menu menu = menuDTOConverter.toEntity(createDTO);
+        Menu menu = MenuDTOConverter.toEntity(createDTO);
         
         // 设置默认值
         if (menu.getParentId() == null) {
@@ -305,7 +304,7 @@ public class MenuService {
         
         Menu savedMenu = menuRepository.save(menu);
         log.info("创建菜单成功: {}", savedMenu.getMenuName());
-        return menuDTOConverter.toDTO(savedMenu);
+        return MenuDTOConverter.toDTO(savedMenu);
     }
 
     /**
@@ -327,11 +326,11 @@ public class MenuService {
         }
         
         // 更新实体
-        menuDTOConverter.updateEntity(existingMenu, updateDTO);
+        MenuDTOConverter.updateEntity(existingMenu, updateDTO);
         
         Menu savedMenu = menuRepository.save(existingMenu);
         log.info("更新菜单成功: {}", savedMenu.getMenuName());
-        return menuDTOConverter.toDTO(savedMenu);
+        return MenuDTOConverter.toDTO(savedMenu);
     }
 
     // ==================== 删除方法 ====================

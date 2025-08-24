@@ -1,6 +1,7 @@
 package com.yc.admin.system.user.dto;
 
 import com.yc.admin.system.user.entity.User;
+import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 

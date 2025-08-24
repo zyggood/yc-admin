@@ -1,6 +1,7 @@
 package com.yc.admin.system.menu.dto;
 
 import com.yc.admin.system.menu.entity.Menu;
+import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
  * @author YC
  * @since 1.0.0
  */
-@Component
+@UtilityClass
 public class MenuDTOConverter {
 
     /**
@@ -138,7 +139,7 @@ public class MenuDTOConverter {
         }
         
         return menus.stream()
-                .map(this::toDTO)
+                .map(MenuDTOConverter::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -151,7 +152,7 @@ public class MenuDTOConverter {
         }
         
         List<MenuDTO> dtoList = menuPage.getContent().stream()
-                .map(this::toDTO)
+                .map(MenuDTOConverter::toDTO)
                 .collect(Collectors.toList());
         
         return new PageImpl<>(dtoList, menuPage.getPageable(), menuPage.getTotalElements());
@@ -188,7 +189,7 @@ public class MenuDTOConverter {
         }
         
         return menus.stream()
-                .map(this::toTreeNodeDTO)
+                .map(MenuDTOConverter::toTreeNodeDTO)
                 .collect(Collectors.toList());
     }
 
@@ -220,7 +221,7 @@ public class MenuDTOConverter {
         }
         
         return menus.stream()
-                .map(this::toPermissionDTO)
+                .map(MenuDTOConverter::toPermissionDTO)
                 .collect(Collectors.toList());
     }
 
@@ -282,7 +283,7 @@ public class MenuDTOConverter {
         }
         
         return menus.stream()
-                .map(this::toExportDTO)
+                .map(MenuDTOConverter::toExportDTO)
                 .collect(Collectors.toList());
     }
 }
