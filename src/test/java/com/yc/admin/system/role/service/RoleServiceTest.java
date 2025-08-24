@@ -39,10 +39,7 @@ class RoleServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
-
-    @Mock
-    private RoleDTOConverter roleDTOConverter;
-
+    
     @InjectMocks
     private RoleService roleService;
 
@@ -109,7 +106,6 @@ class RoleServiceTest {
         void testFindById_Success() {
             // Given
             when(roleRepository.findById(1L)).thenReturn(Optional.of(testRole));
-            when(roleDTOConverter.toDTO(testRole)).thenReturn(testRoleDTO);
 
             // When
             RoleDTO result = roleService.findById(1L);
@@ -119,7 +115,6 @@ class RoleServiceTest {
             assertThat(result.getId()).isEqualTo(1L);
             assertThat(result.getRoleName()).isEqualTo("测试角色");
             verify(roleRepository).findById(1L);
-            verify(roleDTOConverter).toDTO(testRole);
         }
 
         @Test
@@ -133,7 +128,6 @@ class RoleServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("角色不存在");
             verify(roleRepository).findById(999L);
-            verify(roleDTOConverter, never()).toDTO(any());
         }
 
         @Test
@@ -150,7 +144,7 @@ class RoleServiceTest {
         @DisplayName("根据用户ID查询角色列表 - 成功")
         void testFindByUserId_Success() {
             // Given
-            List<Role> roles = Arrays.asList(testRole);
+            List<Role> roles = List.of(testRole);
             when(roleRepository.findByUserId(1L)).thenReturn(roles);
 
             // When
@@ -158,7 +152,7 @@ class RoleServiceTest {
 
             // Then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getId()).isEqualTo(1L);
+            assertThat(result.getFirst().getId()).isEqualTo(1L);
             verify(roleRepository).findByUserId(1L);
         }
 
@@ -177,7 +171,6 @@ class RoleServiceTest {
         void testFindByRoleKey_Success() {
             // Given
             when(roleRepository.findByRoleKeyAndDelFlag("test_role", 0)).thenReturn(Optional.of(testRole));
-            when(roleDTOConverter.toDTO(testRole)).thenReturn(testRoleDTO);
 
             // When
             Optional<RoleDTO> result = roleService.findByRoleKey("test_role");
@@ -186,7 +179,6 @@ class RoleServiceTest {
             assertThat(result).isPresent();
             assertThat(result.get().getRoleKey()).isEqualTo("test_role");
             verify(roleRepository).findByRoleKeyAndDelFlag("test_role", 0);
-            verify(roleDTOConverter).toDTO(testRole);
         }
 
         @Test
@@ -201,7 +193,6 @@ class RoleServiceTest {
             // Then
             assertThat(result).isEmpty();
             verify(roleRepository).findByRoleKeyAndDelFlag("nonexistent", 0);
-            verify(roleDTOConverter, never()).toDTO(any());
         }
 
         @Test
@@ -209,7 +200,6 @@ class RoleServiceTest {
         void testFindByRoleName_Success() {
             // Given
             when(roleRepository.findByRoleNameAndDelFlag("测试角色", 0)).thenReturn(Optional.of(testRole));
-            when(roleDTOConverter.toDTO(testRole)).thenReturn(testRoleDTO);
 
             // When
             Optional<RoleDTO> result = roleService.findByRoleName("测试角色");
@@ -218,36 +208,32 @@ class RoleServiceTest {
             assertThat(result).isPresent();
             assertThat(result.get().getRoleName()).isEqualTo("测试角色");
             verify(roleRepository).findByRoleNameAndDelFlag("测试角色", 0);
-            verify(roleDTOConverter).toDTO(testRole);
         }
 
         @Test
         @DisplayName("查询所有角色 - 成功")
         void testFindAll_Success() {
             // Given
-            List<Role> roles = Arrays.asList(testRole);
-            List<RoleDTO> roleDTOs = Arrays.asList(testRoleDTO);
+            List<Role> roles = List.of(testRole);
+            List<RoleDTO> roleDTOs = List.of(testRoleDTO);
             when(roleRepository.findByDelFlagOrderByRoleSortAsc(0)).thenReturn(roles);
-            when(roleDTOConverter.toDTOList(roles)).thenReturn(roleDTOs);
 
             // When
             List<RoleDTO> result = roleService.findAll();
 
             // Then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getId()).isEqualTo(1L);
+            assertThat(result.getFirst().getId()).isEqualTo(1L);
             verify(roleRepository).findByDelFlagOrderByRoleSortAsc(0);
-            verify(roleDTOConverter).toDTOList(roles);
         }
 
         @Test
         @DisplayName("根据状态查询角色 - 有状态参数")
         void testFindByStatus_WithStatus() {
             // Given
-            List<Role> roles = Arrays.asList(testRole);
-            List<RoleDTO> roleDTOs = Arrays.asList(testRoleDTO);
+            List<Role> roles = List.of(testRole);
+            List<RoleDTO> roleDTOs = List.of(testRoleDTO);
             when(roleRepository.findAllForSelect(Role.Status.NORMAL, 0)).thenReturn(roles);
-            when(roleDTOConverter.toDTOList(roles)).thenReturn(roleDTOs);
 
             // When
             List<RoleDTO> result = roleService.findByStatus(Role.Status.NORMAL);
@@ -255,17 +241,15 @@ class RoleServiceTest {
             // Then
             assertThat(result).hasSize(1);
             verify(roleRepository).findAllForSelect(Role.Status.NORMAL, 0);
-            verify(roleDTOConverter).toDTOList(roles);
         }
 
         @Test
         @DisplayName("根据状态查询角色 - 无状态参数")
         void testFindByStatus_WithoutStatus() {
             // Given
-            List<Role> roles = Arrays.asList(testRole);
-            List<RoleDTO> roleDTOs = Arrays.asList(testRoleDTO);
+            List<Role> roles = List.of(testRole);
+            List<RoleDTO> roleDTOs = List.of(testRoleDTO);
             when(roleRepository.findByDelFlagOrderByRoleSortAsc(0)).thenReturn(roles);
-            when(roleDTOConverter.toDTOList(roles)).thenReturn(roleDTOs);
 
             // When
             List<RoleDTO> result = roleService.findByStatus("");
@@ -273,7 +257,6 @@ class RoleServiceTest {
             // Then
             assertThat(result).hasSize(1);
             verify(roleRepository).findByDelFlagOrderByRoleSortAsc(0);
-            verify(roleDTOConverter).toDTOList(roles);
         }
 
         @Test
@@ -281,10 +264,9 @@ class RoleServiceTest {
         void testFindAllPaged_Success() {
             // Given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Role> rolePage = new PageImpl<>(Arrays.asList(testRole), pageable, 1);
-            Page<RoleDTO> roleDTOPage = new PageImpl<>(Arrays.asList(testRoleDTO), pageable, 1);
+            Page<Role> rolePage = new PageImpl<>(List.of(testRole), pageable, 1);
+            Page<RoleDTO> roleDTOPage = new PageImpl<>(List.of(testRoleDTO), pageable, 1);
             when(roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable)).thenReturn(rolePage);
-            when(roleDTOConverter.toDTOPage(rolePage)).thenReturn(roleDTOPage);
 
             // When
             Page<RoleDTO> result = roleService.findAll(0, 10);
@@ -293,7 +275,6 @@ class RoleServiceTest {
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getTotalElements()).isEqualTo(1);
             verify(roleRepository).findByDelFlagOrderByRoleSortAsc(0, pageable);
-            verify(roleDTOConverter).toDTOPage(rolePage);
         }
 
         @Test
@@ -301,11 +282,10 @@ class RoleServiceTest {
         void testFindByConditions_Success() {
             // Given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Role> rolePage = new PageImpl<>(Arrays.asList(testRole), pageable, 1);
-            Page<RoleDTO> roleDTOPage = new PageImpl<>(Arrays.asList(testRoleDTO), pageable, 1);
+            Page<Role> rolePage = new PageImpl<>(List.of(testRole), pageable, 1);
+            Page<RoleDTO> roleDTOPage = new PageImpl<>(List.of(testRoleDTO), pageable, 1);
             when(roleRepository.findByConditions("测试", "test", Role.Status.NORMAL, 0, pageable))
                     .thenReturn(rolePage);
-            when(roleDTOConverter.toDTOPage(rolePage)).thenReturn(roleDTOPage);
 
             // When
             Page<RoleDTO> result = roleService.findByConditions("测试", "test", Role.Status.NORMAL, 0, 10);
@@ -313,7 +293,6 @@ class RoleServiceTest {
             // Then
             assertThat(result.getContent()).hasSize(1);
             verify(roleRepository).findByConditions("测试", "test", Role.Status.NORMAL, 0, pageable);
-            verify(roleDTOConverter).toDTOPage(rolePage);
         }
 
         @Test
@@ -334,22 +313,20 @@ class RoleServiceTest {
         @DisplayName("查询所有正常状态角色用于下拉选择 - 成功")
         void testFindAllForSelect_Success() {
             // Given
-            List<Role> roles = Arrays.asList(testRole);
+            List<Role> roles = List.of(testRole);
             RoleDTO.SelectorDTO selectorDTO = new RoleDTO.SelectorDTO();
             selectorDTO.setId(1L);
             selectorDTO.setRoleName("测试角色");
-            List<RoleDTO.SelectorDTO> selectorDTOs = Arrays.asList(selectorDTO);
+            List<RoleDTO.SelectorDTO> selectorDTOs = List.of(selectorDTO);
             when(roleRepository.findAllForSelect(Role.Status.NORMAL, 0)).thenReturn(roles);
-            when(roleDTOConverter.toSelectorDTOList(roles)).thenReturn(selectorDTOs);
 
             // When
             List<RoleDTO.SelectorDTO> result = roleService.findAllForSelect();
 
             // Then
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getId()).isEqualTo(1L);
+            assertThat(result.getFirst().getId()).isEqualTo(1L);
             verify(roleRepository).findAllForSelect(Role.Status.NORMAL, 0);
-            verify(roleDTOConverter).toSelectorDTOList(roles);
         }
     }
 
@@ -392,9 +369,7 @@ class RoleServiceTest {
 
             when(roleRepository.findByRoleKeyAndDelFlag("new_role", 0)).thenReturn(Optional.empty());
             when(roleRepository.findByRoleNameAndDelFlag("新角色", 0)).thenReturn(Optional.empty());
-            when(roleDTOConverter.toEntity(createDTO)).thenReturn(newRole);
             when(roleRepository.save(any(Role.class))).thenReturn(savedRole);
-            when(roleDTOConverter.toDTO(savedRole)).thenReturn(savedRoleDTO);
 
             // When
             RoleDTO result = roleService.createRole(createDTO);
@@ -405,9 +380,7 @@ class RoleServiceTest {
             assertThat(result.getRoleName()).isEqualTo("新角色");
             verify(roleRepository).findByRoleKeyAndDelFlag("new_role", 0);
             verify(roleRepository).findByRoleNameAndDelFlag("新角色", 0);
-            verify(roleDTOConverter).toEntity(createDTO);
             verify(roleRepository).save(any(Role.class));
-            verify(roleDTOConverter).toDTO(savedRole);
         }
 
         @Test
@@ -475,7 +448,6 @@ class RoleServiceTest {
             when(roleRepository.existsByRoleKeyAndIdNotAndDelFlag("updated_role", 1L, 0)).thenReturn(false);
             when(roleRepository.existsByRoleNameAndIdNotAndDelFlag("更新角色", 1L, 0)).thenReturn(false);
             when(roleRepository.save(any(Role.class))).thenReturn(updatedRole);
-            when(roleDTOConverter.toDTO(updatedRole)).thenReturn(updatedRoleDTO);
 
             // When
             RoleDTO result = roleService.updateRole(updateDTO);
@@ -487,9 +459,7 @@ class RoleServiceTest {
             verify(roleRepository).findById(1L);
             verify(roleRepository).existsByRoleKeyAndIdNotAndDelFlag("updated_role", 1L, 0);
             verify(roleRepository).existsByRoleNameAndIdNotAndDelFlag("更新角色", 1L, 0);
-            verify(roleDTOConverter).updateEntity(testRole, updateDTO);
             verify(roleRepository).save(any(Role.class));
-            verify(roleDTOConverter).toDTO(updatedRole);
         }
 
         @Test
@@ -606,7 +576,7 @@ class RoleServiceTest {
         @DisplayName("批量删除角色 - 成功")
         void testDeleteRoles_Success() {
             // Given
-            List<Long> ids = Arrays.asList(1L, 2L);
+            List<Long> ids = List.of(1L, 2L);
             Role role2 = new Role();
             role2.setId(2L);
             role2.setRoleKey("test_role2");
@@ -783,7 +753,6 @@ class RoleServiceTest {
             Page<Role> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
             Page<RoleDTO> emptyDTOPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
             when(roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable)).thenReturn(emptyPage);
-            when(roleDTOConverter.toDTOPage(emptyPage)).thenReturn(emptyDTOPage);
 
             // When
             Page<RoleDTO> result = roleService.findAll(0, 1);
@@ -799,11 +768,10 @@ class RoleServiceTest {
         void testFindByConditions_EmptyStringParameters() {
             // Given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Role> rolePage = new PageImpl<>(Arrays.asList(testRole), pageable, 1);
-            Page<RoleDTO> roleDTOPage = new PageImpl<>(Arrays.asList(testRoleDTO), pageable, 1);
+            Page<Role> rolePage = new PageImpl<>(List.of(testRole), pageable, 1);
+            Page<RoleDTO> roleDTOPage = new PageImpl<>(List.of(testRoleDTO), pageable, 1);
             when(roleRepository.findByConditions(null, null, null, 0, pageable))
                     .thenReturn(rolePage);
-            when(roleDTOConverter.toDTOPage(rolePage)).thenReturn(roleDTOPage);
 
             // When
             Page<RoleDTO> result = roleService.findByConditions("", "", "", 0, 10);

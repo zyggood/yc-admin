@@ -39,9 +39,6 @@ class MenuServiceTest {
     @Mock
     private MenuRepository menuRepository;
 
-    @Mock
-    private MenuDTOConverter menuDTOConverter;
-
     private Menu testMenu;
     private MenuDTO testMenuDTO;
     private MenuDTO.CreateDTO testCreateDTO;
@@ -145,7 +142,6 @@ class MenuServiceTest {
         void testFindById_Success() {
             // Given
             when(menuRepository.findById(1L)).thenReturn(Optional.of(testMenu));
-            when(menuDTOConverter.toDTO(testMenu)).thenReturn(testMenuDTO);
 
             // When
             MenuDTO result = menuService.findById(1L);
@@ -155,7 +151,6 @@ class MenuServiceTest {
             assertThat(result.getId()).isEqualTo(1L);
             assertThat(result.getMenuName()).isEqualTo("测试菜单");
             verify(menuRepository).findById(1L);
-            verify(menuDTOConverter).toDTO(testMenu);
         }
 
         @Test
@@ -199,7 +194,6 @@ class MenuServiceTest {
             List<Menu> menuList = Arrays.asList(testMenu);
             List<MenuDTO> menuDTOList = Arrays.asList(testMenuDTO);
             when(menuRepository.findByDelFlagOrderByOrderNumAsc(0)).thenReturn(menuList);
-            when(menuDTOConverter.toDTOList(menuList)).thenReturn(menuDTOList);
 
             // When
             List<MenuDTO> result = menuService.findAll();
@@ -209,7 +203,6 @@ class MenuServiceTest {
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getMenuName()).isEqualTo("测试菜单");
             verify(menuRepository).findByDelFlagOrderByOrderNumAsc(0);
-            verify(menuDTOConverter).toDTOList(menuList);
         }
 
         @Test
@@ -217,7 +210,6 @@ class MenuServiceTest {
         void testFindAll_EmptyResult() {
             // Given
             when(menuRepository.findByDelFlagOrderByOrderNumAsc(0)).thenReturn(Collections.emptyList());
-            when(menuDTOConverter.toDTOList(Collections.emptyList())).thenReturn(Collections.emptyList());
 
             // When
             List<MenuDTO> result = menuService.findAll();
@@ -226,7 +218,6 @@ class MenuServiceTest {
             assertThat(result).isNotNull();
             assertThat(result).isEmpty();
             verify(menuRepository).findByDelFlagOrderByOrderNumAsc(0);
-            verify(menuDTOConverter).toDTOList(Collections.emptyList());
         }
 
         @Test
@@ -237,7 +228,6 @@ class MenuServiceTest {
             Page<Menu> menuPage = new PageImpl<>(menuList, PageRequest.of(0, 10), 1);
             Page<MenuDTO> menuDTOPage = new PageImpl<>(Arrays.asList(testMenuDTO), PageRequest.of(0, 10), 1);
             when(menuRepository.findByConditions("测试", "C", 0, 0, 0, PageRequest.of(0, 10))).thenReturn(menuPage);
-            when(menuDTOConverter.toDTOPage(menuPage)).thenReturn(menuDTOPage);
 
             // When
             Page<MenuDTO> result = menuService.findByConditions("测试", "C", 0, 0, 0, 10);
@@ -246,7 +236,6 @@ class MenuServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(1);
             verify(menuRepository).findByConditions("测试", "C", 0, 0, 0, PageRequest.of(0, 10));
-            verify(menuDTOConverter).toDTOPage(menuPage);
         }
 
         @Test
@@ -256,7 +245,6 @@ class MenuServiceTest {
             Page<Menu> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
             Page<MenuDTO> emptyDTOPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
             when(menuRepository.findByConditions("不存在", "C", 0, 0, 0, PageRequest.of(0, 10))).thenReturn(emptyPage);
-            when(menuDTOConverter.toDTOPage(emptyPage)).thenReturn(emptyDTOPage);
 
             // When
             Page<MenuDTO> result = menuService.findByConditions("不存在", "C", 0, 0, 0, 10);
@@ -265,7 +253,6 @@ class MenuServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).isEmpty();
             verify(menuRepository).findByConditions("不存在", "C", 0, 0, 0, PageRequest.of(0, 10));
-            verify(menuDTOConverter).toDTOPage(emptyPage);
         }
     }
 
@@ -295,18 +282,14 @@ class MenuServiceTest {
             newMenu.setId(2L);
             newMenu.setDelFlag(0);
 
-            when(menuDTOConverter.toEntity(testCreateDTO)).thenReturn(newMenu);
             when(menuRepository.save(any(Menu.class))).thenReturn(newMenu);
-            when(menuDTOConverter.toDTO(newMenu)).thenReturn(testMenuDTO);
 
             // When
             MenuDTO result = menuService.createMenu(testCreateDTO);
 
             // Then
             assertThat(result).isNotNull();
-            verify(menuDTOConverter).toEntity(testCreateDTO);
             verify(menuRepository).save(any(Menu.class));
-            verify(menuDTOConverter).toDTO(newMenu);
         }
 
         @Test
@@ -360,7 +343,6 @@ class MenuServiceTest {
         void testCreateMenu_DatabaseException() {
             // Given
             Menu newMenu = Menu.builder().menuName("新菜单").build();
-            when(menuDTOConverter.toEntity(testCreateDTO)).thenReturn(newMenu);
             when(menuRepository.save(any(Menu.class))).thenThrow(new RuntimeException("数据库连接失败"));
 
             // When & Then
@@ -380,7 +362,6 @@ class MenuServiceTest {
             // Given
             when(menuRepository.findById(1L)).thenReturn(Optional.of(testMenu));
             when(menuRepository.save(any(Menu.class))).thenReturn(testMenu);
-            when(menuDTOConverter.toDTO(testMenu)).thenReturn(testMenuDTO);
 
             // When
             MenuDTO result = menuService.updateMenu(testUpdateDTO);
@@ -389,7 +370,6 @@ class MenuServiceTest {
             assertThat(result).isNotNull();
             verify(menuRepository).findById(1L);
             verify(menuRepository).save(any(Menu.class));
-            verify(menuDTOConverter).toDTO(testMenu);
         }
 
         @Test
@@ -604,8 +584,6 @@ class MenuServiceTest {
             parentNode.getChildren().add(childNode);
             List<MenuDTO.TreeNodeDTO> expectedResult = Arrays.asList(parentNode);
             
-            when(menuDTOConverter.toTreeNodeDTOList(menuList)).thenReturn(expectedResult);
-
             // When
             List<MenuDTO.TreeNodeDTO> result = menuService.buildMenuTree();
 
@@ -657,8 +635,6 @@ class MenuServiceTest {
             node1.getChildren().add(node2);
             List<MenuDTO.TreeNodeDTO> expectedResult = Arrays.asList(node1);
             
-            when(menuDTOConverter.toTreeNodeDTOList(menuList)).thenReturn(expectedResult);
-
             // When
             List<MenuDTO.TreeNodeDTO> result = menuService.buildMenuTree();
 
@@ -682,10 +658,8 @@ class MenuServiceTest {
             
             // 应该成功
             Menu newMenu = Menu.builder().menuName(maxLengthName).build();
-            when(menuDTOConverter.toEntity(testCreateDTO)).thenReturn(newMenu);
             when(menuRepository.save(any(Menu.class))).thenReturn(newMenu);
-            when(menuDTOConverter.toDTO(newMenu)).thenReturn(testMenuDTO);
-            
+
             assertThatCode(() -> menuService.createMenu(testCreateDTO)).doesNotThrowAnyException();
 
             // 测试超长
@@ -703,10 +677,8 @@ class MenuServiceTest {
             // 测试最小值
             testCreateDTO.setOrderNum(0);
             Menu newMenu = Menu.builder().orderNum(0).build();
-            when(menuDTOConverter.toEntity(testCreateDTO)).thenReturn(newMenu);
             when(menuRepository.save(any(Menu.class))).thenReturn(newMenu);
-            when(menuDTOConverter.toDTO(newMenu)).thenReturn(testMenuDTO);
-            
+
             assertThatCode(() -> menuService.createMenu(testCreateDTO)).doesNotThrowAnyException();
 
             // 测试负数
@@ -728,7 +700,6 @@ class MenuServiceTest {
             }
             
             when(menuRepository.findByDelFlagOrderByOrderNumAsc(0)).thenReturn(largeMenuList);
-            when(menuDTOConverter.toDTOList(largeMenuList)).thenReturn(Collections.emptyList());
 
             // When & Then
             assertThatCode(() -> menuService.findAll()).doesNotThrowAnyException();
@@ -739,7 +710,6 @@ class MenuServiceTest {
         void testConcurrentAccess() {
             // Given
             when(menuRepository.findById(1L)).thenReturn(Optional.of(testMenu));
-            when(menuDTOConverter.toDTO(testMenu)).thenReturn(testMenuDTO);
 
             // When & Then - 模拟并发访问
             assertThatCode(() -> {
@@ -760,7 +730,6 @@ class MenuServiceTest {
         void testQueryPerformance() {
             // Given
             when(menuRepository.findById(1L)).thenReturn(Optional.of(testMenu));
-            when(menuDTOConverter.toDTO(testMenu)).thenReturn(testMenuDTO);
 
             // When & Then
             long startTime = System.currentTimeMillis();
@@ -796,7 +765,6 @@ class MenuServiceTest {
                         .build();
                 nodeList.add(node);
                 
-                lenient().when(menuDTOConverter.toTreeNodeDTO(menu)).thenReturn(node);
             }
             
             when(menuRepository.findByDelFlagOrderByOrderNumAsc(0)).thenReturn(largeMenuList);

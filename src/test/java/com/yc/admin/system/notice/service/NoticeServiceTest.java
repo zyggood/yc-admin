@@ -42,10 +42,7 @@ class NoticeServiceTest {
 
     @MockBean
     private NoticeRepository noticeRepository;
-
-    @MockBean
-    private NoticeDtoConverter noticeDtoConverter;
-
+    
     private NoticeService noticeService;
 
     private Notice testNotice;
@@ -123,7 +120,6 @@ class NoticeServiceTest {
             Page<NoticeDto> expectedPage = new PageImpl<>(Arrays.asList(testNoticeDto), pageable, 1);
             
             when(noticeRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(noticePage);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             Page<NoticeDto> result = noticeService.findPage(testQueryDto, pageable);
@@ -144,7 +140,6 @@ class NoticeServiceTest {
             Page<Notice> noticePage = new PageImpl<>(Arrays.asList(testNotice), pageable, 1);
             
             when(noticeRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(noticePage);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             Page<NoticeDto> result = noticeService.findPage(emptyQuery, pageable);
@@ -185,7 +180,6 @@ class NoticeServiceTest {
             Page<Notice> noticePage = new PageImpl<>(Arrays.asList(testNotice), pageable, 1);
             
             when(noticeRepository.findPublishedNotices(eq(1), eq(pageable))).thenReturn(noticePage);
-            when(noticeDtoConverter.toSimpleDto(any(Notice.class))).thenReturn(testNoticeDto);
 
             // When
             Page<NoticeDto> result = noticeService.findPublishedNotices(pageable);
@@ -208,7 +202,6 @@ class NoticeServiceTest {
         void testFindById_Success() {
             // Given
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             Optional<NoticeDto> optionalResult = noticeService.findById(1L);
@@ -263,9 +256,7 @@ class NoticeServiceTest {
             newNotice.setDelFlag(0);
             
             when(noticeRepository.existsByNoticeTitleAndIdNot("新通知", null)).thenReturn(false);
-            when(noticeDtoConverter.toEntity(testCreateDto)).thenReturn(newNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.create(testCreateDto);
@@ -307,9 +298,7 @@ class NoticeServiceTest {
             // Given
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
             when(noticeRepository.existsByNoticeTitleAndIdNot("更新通知", 1L)).thenReturn(false);
-            when(noticeDtoConverter.updateEntity(any(NoticeDto.Update.class), any(Notice.class))).thenReturn(testNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(any(Notice.class))).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.update(testUpdateDto);
@@ -318,7 +307,6 @@ class NoticeServiceTest {
             assertNotNull(result);
             verify(noticeRepository).findByIdAndNotDeleted(1L);
             verify(noticeRepository).existsByNoticeTitleAndIdNot("更新通知", 1L);
-            verify(noticeDtoConverter).updateEntity(any(NoticeDto.Update.class), any(Notice.class));
             verify(noticeRepository).save(any(Notice.class));
         }
 
@@ -358,9 +346,7 @@ class NoticeServiceTest {
         void testUpdateStatus_Success() {
             // Given
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
-            when(noticeDtoConverter.updateStatus(any(NoticeDto.StatusUpdate.class), any(Notice.class))).thenReturn(testNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(any(Notice.class))).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.updateStatus(testStatusUpdateDto);
@@ -368,7 +354,6 @@ class NoticeServiceTest {
             // Then
             assertNotNull(result);
             verify(noticeRepository).findByIdAndNotDeleted(1L);
-            verify(noticeDtoConverter).updateStatus(any(NoticeDto.StatusUpdate.class), any(Notice.class));
             verify(noticeRepository).save(any(Notice.class));
         }
 
@@ -427,7 +412,6 @@ class NoticeServiceTest {
             testNotice.setStatus(0); // 草稿状态
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.publish(1L);
@@ -475,7 +459,6 @@ class NoticeServiceTest {
             testNotice.setStatus(1); // 已发布状态
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.close(1L);
@@ -535,8 +518,6 @@ class NoticeServiceTest {
         void testConverterException() {
             // Given
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
-            when(noticeDtoConverter.toDto(testNotice))
-                    .thenThrow(new RuntimeException("转换异常"));
 
             // When & Then
             assertThrows(RuntimeException.class, () -> {
@@ -577,9 +558,7 @@ class NoticeServiceTest {
             Notice newNotice = new Notice();
             newNotice.setNoticeTitle(maxTitle);
             when(noticeRepository.existsByNoticeTitleAndIdNot(maxTitle, null)).thenReturn(false);
-            when(noticeDtoConverter.toEntity(testCreateDto)).thenReturn(newNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.create(testCreateDto);
@@ -599,9 +578,7 @@ class NoticeServiceTest {
             Notice newNotice = new Notice();
             newNotice.setRemark(maxRemark);
             when(noticeRepository.existsByNoticeTitleAndIdNot("新通知", null)).thenReturn(false);
-            when(noticeDtoConverter.toEntity(testCreateDto)).thenReturn(newNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(testNotice)).thenReturn(testNoticeDto);
 
             // When
             NoticeDto result = noticeService.create(testCreateDto);
@@ -617,17 +594,13 @@ class NoticeServiceTest {
             // Given
             testStatusUpdateDto.setStatus(2); // 关闭状态
             when(noticeRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(testNotice));
-            when(noticeDtoConverter.updateStatus(any(NoticeDto.StatusUpdate.class), any(Notice.class))).thenReturn(testNotice);
             when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
-            when(noticeDtoConverter.toDto(any(Notice.class))).thenReturn(testNoticeDto);
-
             // When
             NoticeDto result = noticeService.updateStatus(testStatusUpdateDto);
 
             // Then
             assertNotNull(result);
             verify(noticeRepository).findByIdAndNotDeleted(1L);
-            verify(noticeDtoConverter).updateStatus(any(NoticeDto.StatusUpdate.class), any(Notice.class));
             verify(noticeRepository).save(any(Notice.class));
         }
     }
