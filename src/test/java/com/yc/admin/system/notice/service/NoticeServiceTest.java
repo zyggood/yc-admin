@@ -57,7 +57,7 @@ class NoticeServiceTest {
 
     @BeforeEach
     void setUp() {
-        noticeService = new NoticeService(noticeRepository, noticeDtoConverter);
+        noticeService = new NoticeService(noticeRepository);
         
         // 初始化测试数据
         testNotice = new Notice();
