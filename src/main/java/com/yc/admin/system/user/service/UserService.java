@@ -5,6 +5,9 @@ import com.yc.admin.system.user.entity.User;
 import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.user.dto.UserDTOConverter;
 import com.yc.admin.system.user.repository.UserRepository;
+import com.yc.admin.system.user.service.UserRoleService;
+import com.yc.admin.system.dept.repository.DeptRepository;
+import com.yc.admin.system.role.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +34,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserDTOConverter userDTOConverter;
+    private final UserRoleService userRoleService;
+    private final DeptRepository deptRepository;
+    private final RoleRepository roleRepository;
 
     // ==================== 查询操作 ====================
 
@@ -47,7 +52,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
-        return userDTOConverter.toDTO(user);
+        return UserDTOConverter.toDTO(user);
     }
 
     /**
@@ -118,7 +123,7 @@ public class UserService {
      */
     public Page<UserDTO> findAll(Pageable pageable) {
         Page<User> userPage = userRepository.findByDelFlagOrderByCreateTimeDesc(0, pageable);
-        return userDTOConverter.toDTOPage(userPage);
+        return UserDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -132,7 +137,7 @@ public class UserService {
             return findAll(pageable);
         }
         Page<User> userPage = userRepository.findByStatusAndDelFlagOrderByCreateTimeDesc(status, 0, pageable);
-        return userDTOConverter.toDTOPage(userPage);
+        return UserDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -153,7 +158,7 @@ public class UserService {
                 0,
                 pageable
         );
-        return userDTOConverter.toDTOPage(userPage);
+        return UserDTOConverter.toDTOPage(userPage);
     }
 
     /**
@@ -170,7 +175,7 @@ public class UserService {
      */
     public List<UserDTO> findAllForExport() {
         List<User> users = userRepository.findByDelFlagOrderByCreateTimeDesc(0);
-        return userDTOConverter.toDTOList(users);
+        return UserDTOConverter.toDTOList(users);
     }
 
     // ==================== 创建操作 ====================
@@ -182,7 +187,7 @@ public class UserService {
      */
     @Transactional
     public UserDTO createUser(UserDTO.CreateDTO createDTO) {
-        User user = userDTOConverter.toEntity(createDTO);
+        User user = UserDTOConverter.toEntity(createDTO);
         log.info("开始创建用户: {}", user.getUserName());
         
         // 参数校验
@@ -205,6 +210,24 @@ public class UserService {
             throw new BusinessException("手机号已存在: " + user.getPhone());
         }
         
+        // 验证部门是否存在
+        if (createDTO.getDeptId() != null) {
+            if (!deptRepository.findById(createDTO.getDeptId()).isPresent()) {
+                throw new BusinessException("部门不存在: " + createDTO.getDeptId());
+            }
+        }
+        
+        // 验证角色是否存在
+        if (createDTO.getRoleIds() != null && !createDTO.getRoleIds().isEmpty()) {
+            List<Long> existingRoleIds = roleRepository.findAllById(createDTO.getRoleIds())
+                    .stream()
+                    .map(role -> role.getId())
+                    .toList();
+            if (existingRoleIds.size() != createDTO.getRoleIds().size()) {
+                throw new BusinessException("角色不存在或已删除");
+            }
+        }
+        
         // 加密密码
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         
@@ -220,9 +243,15 @@ public class UserService {
         }
         
         User savedUser = userRepository.save(user);
+        
+        // 分配角色
+        if (createDTO.getRoleIds() != null && !createDTO.getRoleIds().isEmpty()) {
+            userRoleService.assignRolesToUser(savedUser.getId(), createDTO.getRoleIds());
+        }
+        
         log.info("用户创建成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
         
-        return userDTOConverter.toDTO(savedUser);
+        return UserDTOConverter.toDTO(savedUser);
     }
 
     // ==================== 更新操作 ====================
@@ -264,12 +293,18 @@ public class UserService {
         }
         
         // 更新字段
-        userDTOConverter.updateEntity(existingUser, updateDTO);
+        UserDTOConverter.updateEntity(existingUser, updateDTO);
         
         User savedUser = userRepository.save(existingUser);
+        
+        // 更新角色分配
+        if (updateDTO.getRoleIds() != null) {
+            userRoleService.assignRolesToUser(savedUser.getId(), updateDTO.getRoleIds());
+        }
+        
         log.info("用户更新成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
         
-        return userDTOConverter.toDTO(savedUser);
+        return UserDTOConverter.toDTO(savedUser);
     }
 
     /**
@@ -290,7 +325,7 @@ public class UserService {
         User savedUser = userRepository.save(existingUser);
         
         log.info("用户状态更新成功: {}, ID: {}", savedUser.getUserName(), savedUser.getId());
-        return userDTOConverter.toDTO(savedUser);
+        return UserDTOConverter.toDTO(savedUser);
     }
 
     // ==================== 内部方法 ====================
@@ -393,6 +428,11 @@ public class UserService {
     public void deleteUser(Long userId) {
         log.info("开始删除用户: {}", userId);
         
+        // 检查是否为管理员用户
+        if (User.ADMIN_USER_ID.equals(userId)) {
+            throw new BusinessException("不能删除管理员用户");
+        }
+        
         User user = findEntityById(userId)
                 .orElseThrow(() -> new BusinessException("用户不存在: " + userId));
         
@@ -413,6 +453,11 @@ public class UserService {
         
         if (userIds == null || userIds.isEmpty()) {
             throw new BusinessException("用户ID列表不能为空");
+        }
+        
+        // 检查是否包含管理员用户
+        if (userIds.contains(User.ADMIN_USER_ID)) {
+            throw new BusinessException("不能删除管理员用户");
         }
         
         int deletedCount = userRepository.deleteByIds(userIds);

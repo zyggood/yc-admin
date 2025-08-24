@@ -3,24 +3,26 @@ package com.yc.admin.system.user.dto;
 import com.yc.admin.system.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 用户DTO转换器
+ * 用户DTO转换器工具类
  *
  * @author YC
  * @since 1.0.0
  */
-@Component
-public class UserDTOConverter {
+public final class UserDTOConverter {
+
+    private UserDTOConverter() {
+        // 工具类不允许实例化
+    }
 
     /**
      * Entity转DTO
      */
-    public UserDTO toDTO(User user) {
+    public static UserDTO toDTO(User user) {
         if (user == null) {
             return null;
         }
@@ -46,7 +48,7 @@ public class UserDTOConverter {
     /**
      * DTO转Entity
      */
-    public User toEntity(UserDTO dto) {
+    public static User toEntity(UserDTO dto) {
         if (dto == null) {
             return null;
         }
@@ -72,7 +74,7 @@ public class UserDTOConverter {
     /**
      * CreateDTO转Entity
      */
-    public User toEntity(UserDTO.CreateDTO createDTO) {
+    public static User toEntity(UserDTO.CreateDTO createDTO) {
         if (createDTO == null) {
             return null;
         }
@@ -91,9 +93,9 @@ public class UserDTOConverter {
     }
 
     /**
-     * 更新Entity（从UpdateDTO）
+     * 更新Entity
      */
-    public void updateEntity(User user, UserDTO.UpdateDTO updateDTO) {
+    public static void updateEntity(User user, UserDTO.UpdateDTO updateDTO) {
         if (user == null || updateDTO == null) {
             return;
         }
@@ -111,35 +113,35 @@ public class UserDTOConverter {
     /**
      * Entity列表转DTO列表
      */
-    public List<UserDTO> toDTOList(List<User> users) {
+    public static List<UserDTO> toDTOList(List<User> users) {
         if (users == null) {
             return null;
         }
         
         return users.stream()
-                .map(this::toDTO)
+                .map(UserDTOConverter::toDTO)
                 .collect(Collectors.toList());
     }
 
     /**
      * Entity分页转DTO分页
      */
-    public Page<UserDTO> toDTOPage(Page<User> userPage) {
+    public static Page<UserDTO> toDTOPage(Page<User> userPage) {
         if (userPage == null) {
             return null;
         }
         
         List<UserDTO> dtoList = userPage.getContent().stream()
-                .map(this::toDTO)
+                .map(UserDTOConverter::toDTO)
                 .collect(Collectors.toList());
         
         return new PageImpl<>(dtoList, userPage.getPageable(), userPage.getTotalElements());
     }
 
     /**
-     * 转换为选择器DTO
+     * Entity转SelectorDTO
      */
-    public UserDTO.SelectorDTO toSelectorDTO(User user) {
+    public static UserDTO.SelectorDTO toSelectorDTO(User user) {
         if (user == null) {
             return null;
         }
@@ -155,9 +157,9 @@ public class UserDTOConverter {
     }
 
     /**
-     * 转换为导出DTO
+     * Entity转ExportDTO
      */
-    public UserDTO.ExportDTO toExportDTO(User user) {
+    public static UserDTO.ExportDTO toExportDTO(User user) {
         if (user == null) {
             return null;
         }
@@ -175,28 +177,28 @@ public class UserDTOConverter {
     }
 
     /**
-     * Entity列表转选择器DTO列表
+     * Entity列表转SelectorDTO列表
      */
-    public List<UserDTO.SelectorDTO> toSelectorDTOList(List<User> users) {
+    public static List<UserDTO.SelectorDTO> toSelectorDTOList(List<User> users) {
         if (users == null) {
             return null;
         }
         
         return users.stream()
-                .map(this::toSelectorDTO)
+                .map(UserDTOConverter::toSelectorDTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Entity列表转导出DTO列表
+     * Entity列表转ExportDTO列表
      */
-    public List<UserDTO.ExportDTO> toExportDTOList(List<User> users) {
+    public static List<UserDTO.ExportDTO> toExportDTOList(List<User> users) {
         if (users == null) {
             return null;
         }
         
         return users.stream()
-                .map(this::toExportDTO)
+                .map(UserDTOConverter::toExportDTO)
                 .collect(Collectors.toList());
     }
 }
