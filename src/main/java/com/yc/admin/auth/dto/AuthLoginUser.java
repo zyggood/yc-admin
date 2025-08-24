@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -79,7 +80,10 @@ public class AuthLoginUser implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 合并权限和角色
-        Set<String> authorities = permissions;
+        Set<String> authorities = new HashSet<>();
+        if (permissions != null) {
+            authorities.addAll(permissions);
+        }
         if (roles != null) {
             // 角色添加ROLE_前缀
             Set<String> roleAuthorities = roles.stream()
