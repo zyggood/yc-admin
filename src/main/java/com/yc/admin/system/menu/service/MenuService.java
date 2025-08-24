@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Validated
 public class MenuService {
 
     private final MenuRepository menuRepository;
@@ -338,7 +341,8 @@ public class MenuService {
      * @param id 菜单ID
      */
     @Transactional
-    public void deleteMenu(Long id) {
+    public void deleteMenu(@NotNull(message = "菜单ID不能为空") Long id) {
+        
         Menu menu = menuRepository.findById(id)
                 .filter(m -> m.getDelFlag() == 0)
                 .orElseThrow(() -> new BusinessException("菜单不存在: " + id));
@@ -484,8 +488,18 @@ public class MenuService {
         
         validateMenuCommon(createDTO);
         
+        // 检查父菜单是否存在
+        Long parentId = createDTO.getParentId();
+        if (parentId != null && !parentId.equals(Menu.TOP_PARENT_ID)) {
+            if (!menuRepository.findById(parentId)
+                    .filter(m -> m.getDelFlag() == 0)
+                    .isPresent()) {
+                throw new BusinessException("父菜单不存在");
+            }
+        }
+        
         // 检查同级菜单名称是否重复
-        Long parentId = createDTO.getParentId() != null ? createDTO.getParentId() : Menu.TOP_PARENT_ID;
+        parentId = createDTO.getParentId() != null ? createDTO.getParentId() : Menu.TOP_PARENT_ID;
         if (menuRepository.existsByMenuNameAndParentIdAndIdNotAndDelFlag(createDTO.getMenuName(), parentId, -1L, 0)) {
             throw new BusinessException("同级菜单名称已存在: " + createDTO.getMenuName());
         }
@@ -534,17 +548,20 @@ public class MenuService {
         String menuType = null;
         String perms = null;
         String path = null;
+        Integer orderNum = null;
         
         if (menuDTO instanceof MenuDTO.CreateDTO createDTO) {
             menuName = createDTO.getMenuName();
             menuType = createDTO.getMenuType();
             perms = createDTO.getPerms();
             path = createDTO.getPath();
+            orderNum = createDTO.getOrderNum();
         } else if (menuDTO instanceof MenuDTO.UpdateDTO updateDTO) {
             menuName = updateDTO.getMenuName();
             menuType = updateDTO.getMenuType();
             perms = updateDTO.getPerms();
             path = updateDTO.getPath();
+            orderNum = updateDTO.getOrderNum();
         }
         
         if (!StringUtils.hasText(menuName)) {
@@ -571,6 +588,11 @@ public class MenuService {
         // 菜单类型必须有路由地址
         if (Menu.Type.MENU.equals(menuType) && !StringUtils.hasText(path)) {
             throw new BusinessException("菜单类型必须设置路由地址");
+        }
+        
+        // 排序号不能为负数
+        if (orderNum != null && orderNum < 0) {
+            throw new BusinessException("排序号不能为负数");
         }
     }
 
