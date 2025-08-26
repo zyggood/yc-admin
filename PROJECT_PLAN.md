@@ -336,11 +336,11 @@ monitor/
 ### 第四阶段：安全与认证
 
 #### 4.1 Spring Security 配置
-- [ ] 配置 Security 过滤器链
+- [x] 配置 Security 过滤器链
   ```
   AI提示词: 创建SecurityConfig配置类，配置Spring Security过滤器链。设置登录页面、登录接口、登出接口。配置静态资源放行规则。实现自定义认证成功/失败处理器。
   ```
-- [ ] 实现 JWT 认证
+- [x] 实现 JWT 认证
   ```
   AI提示词: 集成JWT实现无状态认证。创建JwtUtils工具类，提供token生成、解析、验证功能。实现JwtAuthenticationFilter过滤器，拦截请求验证token。配置token过期时间和刷新机制。
   ```
@@ -398,7 +398,7 @@ monitor/
 #### 5.1 测试
 - [ ] 单元测试编写
   ```
-  AI提示词: 为每个Service类编写单元测试，使用JUnit 5和Mockito。测试覆盖正常流程、异常流程、边界条件。使用@MockBean模拟外部依赖。配置测试数据库，使用@Transactional回滚测试数据。
+  AI提示词: 为每个Service类编写单元测试，使用JUnit 5和Mockito。测试覆盖正常流程、异常流程、边界条件。使用@Mock模拟外部依赖。配置测试数据库，使用@Transactional回滚测试数据。
   ```
 - [ ] 集成测试编写
   ```

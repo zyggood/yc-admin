@@ -108,4 +108,36 @@ public class PermissionService {
         List<Long> permissionMenuIds = getMenuIdsByPermission(permission.trim());
         return userMenuIds.stream().anyMatch(permissionMenuIds::contains);
     }
+    
+    /**
+     * 根据用户ID查询权限标识列表
+     *
+     * @param userId 用户ID
+     * @return 权限标识列表
+     */
+    public List<String> getPermissionsByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return menuRepository.findByUserId(userId).stream()
+                .map(menu -> menu.getPerms())
+                .filter(perms -> perms != null && !perms.trim().isEmpty())
+                .toList();
+    }
+    
+    /**
+     * 根据用户ID查询角色权限字符串列表
+     *
+     * @param userId 用户ID
+     * @return 角色权限字符串列表
+     */
+    public List<String> getRolesByUserId(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return roleRepository.findByUserId(userId).stream()
+                .map(role -> role.getRoleKey())
+                .filter(roleKey -> roleKey != null && !roleKey.trim().isEmpty())
+                .toList();
+    }
 }
