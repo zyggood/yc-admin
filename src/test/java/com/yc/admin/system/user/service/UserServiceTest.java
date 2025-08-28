@@ -110,7 +110,6 @@ class UserServiceTest {
         updateDTO.setPhone("13700137000");
         updateDTO.setSex("1");
         updateDTO.setAvatar("/avatar/updated.jpg");
-        updateDTO.setPassword("newpassword");
         updateDTO.setStatus("0");
         updateDTO.setRemark("更新用户");
         updateDTO.setDeptId(2L);

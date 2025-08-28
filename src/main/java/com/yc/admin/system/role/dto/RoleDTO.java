@@ -166,13 +166,51 @@ public class RoleDTO {
      * 角色更新DTO
      */
     @Data
-    @EqualsAndHashCode(callSuper = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Schema(description = "角色更新数据")
-    public static class UpdateDTO extends CreateDTO {
+    public static class UpdateDTO {
 
         @NotNull(message = "角色ID不能为空")
         @Schema(description = "角色ID", requiredMode = Schema.RequiredMode.REQUIRED)
         private Long id;
+
+        @Size(min = 2, max = 30, message = "角色名称长度必须在2-30个字符之间")
+        @Schema(description = "角色名称")
+        private String roleName;
+
+        @Size(min = 2, max = 100, message = "角色权限字符串长度必须在2-100个字符之间")
+        @Pattern(regexp = "^[a-zA-Z0-9_:]+$", message = "角色权限字符串只能包含字母、数字、下划线和冒号")
+        @Schema(description = "角色权限字符串")
+        private String roleKey;
+
+        @Min(value = 0, message = "显示顺序不能小于0")
+        @Schema(description = "显示顺序")
+        private Integer roleSort;
+
+        @Pattern(regexp = "^[1-5]$", message = "数据范围值不正确")
+        @Schema(description = "数据范围：1=全部数据权限,2=自定数据权限,3=部门数据权限,4=部门及以下数据权限,5=仅本人数据权限")
+        private String dataScope;
+
+        @Schema(description = "菜单树选择项是否关联显示")
+        private Boolean menuCheckStrictly;
+
+        @Schema(description = "部门树选择项是否关联显示")
+        private Boolean deptCheckStrictly;
+
+        @Pattern(regexp = "^[01]$", message = "状态值不正确")
+        @Schema(description = "角色状态：0=正常,1=停用")
+        private String status;
+
+        @Schema(description = "备注")
+        private String remark;
+
+        @Schema(description = "菜单ID列表")
+        private List<Long> menuIds;
+
+        @Schema(description = "部门ID列表（数据权限）")
+        private List<Long> deptIds;
     }
 
     // ==================== 权限分配DTO ====================

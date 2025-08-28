@@ -242,15 +242,67 @@ public class MenuDTO {
      * 菜单更新DTO
      */
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
     @Schema(description = "菜单更新请求")
-    public static class UpdateDTO extends CreateDTO {
+    public static class UpdateDTO {
 
         @NotNull(message = "菜单ID不能为空")
         @Schema(description = "菜单ID", requiredMode = Schema.RequiredMode.REQUIRED)
         private Long id;
+
+        @Size(max = 50, message = "菜单名称长度不能超过50个字符")
+        @Schema(description = "菜单名称")
+        private String menuName;
+
+        @Schema(description = "父菜单ID")
+        private Long parentId;
+
+        @Min(value = 0, message = "显示顺序不能小于0")
+        @Schema(description = "显示顺序")
+        private Integer orderNum;
+
+        @Size(max = 200, message = "路由地址长度不能超过200个字符")
+        @Schema(description = "路由地址")
+        private String path;
+
+        @Size(max = 255, message = "组件路径长度不能超过255个字符")
+        @Schema(description = "组件路径")
+        private String component;
+
+        @Size(max = 255, message = "路由参数长度不能超过255个字符")
+        @Schema(description = "路由参数")
+        private String query;
+
+        @Schema(description = "是否为外链（0否 1是）")
+        private Integer isFrame;
+
+        @Schema(description = "是否缓存（0缓存 1不缓存）")
+        private Integer isCache;
+
+        @NotBlank(message = "菜单类型不能为空")
+        @Pattern(regexp = "^[MCF]$", message = "菜单类型只能是M、C、F")
+        @Schema(description = "菜单类型（M目录 C菜单 F按钮）", requiredMode = Schema.RequiredMode.REQUIRED)
+        private String menuType;
+
+        @Schema(description = "菜单状态（0显示 1隐藏）")
+        private Integer visible;
+
+        @Schema(description = "菜单状态（0正常 1停用）")
+        private Integer status;
+
+        @Size(max = 100, message = "权限标识长度不能超过100个字符")
+        @Schema(description = "权限标识")
+        private String perms;
+
+        @Size(max = 100, message = "菜单图标长度不能超过100个字符")
+        @Schema(description = "菜单图标")
+        private String icon;
+
+        @Size(max = 500, message = "备注长度不能超过500个字符")
+        @Schema(description = "备注")
+        private String remark;
     }
 
     // ==================== 批量操作DTO ====================
