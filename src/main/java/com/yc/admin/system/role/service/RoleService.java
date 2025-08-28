@@ -5,6 +5,9 @@ import com.yc.admin.system.role.dto.RoleDTO;
 import com.yc.admin.system.role.dto.RoleDTOConverter;
 import com.yc.admin.system.role.repository.RoleRepository;
 import com.yc.admin.common.exception.BusinessException;
+import com.yc.admin.system.permission.annotation.DataPermission;
+import com.yc.admin.system.permission.enums.DataScope;
+import com.yc.admin.system.permission.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +34,7 @@ import java.util.Optional;
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final DataPermissionService dataPermissionService;
 
     // ==================== 查询方法 ====================
 
@@ -91,6 +95,7 @@ public class RoleService {
      * 查询所有角色
      * @return 角色列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "r", columnName = "create_by")
     public List<RoleDTO> findAll() {
         List<Role> roles = roleRepository.findByDelFlagOrderByRoleSortAsc(0);
         return RoleDTOConverter.toDTOList(roles);
@@ -101,6 +106,7 @@ public class RoleService {
      * @param status 角色状态
      * @return 角色列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "r", columnName = "create_by")
     public List<RoleDTO> findByStatus(String status) {
         List<Role> roles;
         if (!StringUtils.hasText(status)) {
@@ -117,6 +123,7 @@ public class RoleService {
      * @param size 每页大小
      * @return 角色分页列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "r", columnName = "create_by")
     public Page<RoleDTO> findAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Role> rolePage = roleRepository.findByDelFlagOrderByRoleSortAsc(0, pageable);
@@ -132,6 +139,7 @@ public class RoleService {
      * @param size 每页大小
      * @return 角色分页列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "r", columnName = "create_by")
     public Page<RoleDTO> findByConditions(String roleName, String roleKey, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Role> rolePage = roleRepository.findByConditions(

@@ -1,5 +1,6 @@
 package com.yc.admin.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.yc.admin.system.api.dto.AuthUserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -78,6 +79,7 @@ public class AuthLoginUser implements UserDetails {
     private String os;
     
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 合并权限和角色
         Set<String> authorities = new HashSet<>();
@@ -98,31 +100,37 @@ public class AuthLoginUser implements UserDetails {
     }
     
     @Override
+    @JsonIgnore
     public String getPassword() {
         return user != null ? user.getPassword() : null;
     }
     
     @Override
+    @JsonIgnore
     public String getUsername() {
         return user != null ? user.getUserName() : null;
     }
     
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
     
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
     
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
     
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
         return user != null && user.isEnabled();
     }
@@ -130,6 +138,7 @@ public class AuthLoginUser implements UserDetails {
     /**
      * 获取用户ID
      */
+    @JsonIgnore
     public Long getUserId() {
         return user != null ? user.getId() : null;
     }
@@ -137,6 +146,7 @@ public class AuthLoginUser implements UserDetails {
     /**
      * 获取用户昵称
      */
+    @JsonIgnore
     public String getNickName() {
         return user != null ? user.getNickName() : null;
     }
@@ -144,6 +154,7 @@ public class AuthLoginUser implements UserDetails {
     /**
      * 获取用户邮箱
      */
+    @JsonIgnore
     public String getEmail() {
         return user != null ? user.getEmail() : null;
     }
@@ -151,6 +162,7 @@ public class AuthLoginUser implements UserDetails {
     /**
      * 获取用户手机号
      */
+    @JsonIgnore
     public String getPhone() {
         return user != null ? user.getPhone() : null;
     }
@@ -158,6 +170,7 @@ public class AuthLoginUser implements UserDetails {
     /**
      * 获取用户头像
      */
+    @JsonIgnore
     public String getAvatar() {
         return user != null ? user.getAvatar() : null;
     }
@@ -187,6 +200,7 @@ public class AuthLoginUser implements UserDetails {
      * 
      * @return 是否为超级管理员
      */
+    @JsonIgnore
     public boolean isAdmin() {
         return user != null && user.getId() != null && user.getId().equals(1L);
     }

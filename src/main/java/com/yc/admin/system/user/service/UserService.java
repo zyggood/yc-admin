@@ -8,6 +8,9 @@ import com.yc.admin.system.user.repository.UserRepository;
 import com.yc.admin.system.user.service.UserRoleService;
 import com.yc.admin.system.dept.repository.DeptRepository;
 import com.yc.admin.system.role.repository.RoleRepository;
+import com.yc.admin.system.permission.annotation.DataPermission;
+import com.yc.admin.system.permission.enums.DataScope;
+import com.yc.admin.system.permission.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,6 +40,7 @@ public class UserService {
     private final UserRoleService userRoleService;
     private final DeptRepository deptRepository;
     private final RoleRepository roleRepository;
+    private final DataPermissionService dataPermissionService;
 
     // ==================== 查询操作 ====================
 
@@ -121,6 +125,7 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "u", columnName = "dept_id")
     public Page<UserDTO> findAll(Pageable pageable) {
         Page<User> userPage = userRepository.findByDelFlagOrderByCreateTimeDesc(0, pageable);
         return UserDTOConverter.toDTOPage(userPage);
@@ -132,6 +137,7 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "u", columnName = "dept_id")
     public Page<UserDTO> findByStatus(String status, Pageable pageable) {
         if (!StringUtils.hasText(status)) {
             return findAll(pageable);
@@ -149,6 +155,7 @@ public class UserService {
      * @param pageable 分页参数
      * @return 用户分页列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "u", columnName = "dept_id")
     public Page<UserDTO> findByConditions(String userName, String nickName, String phone, String status, Pageable pageable) {
         Page<User> userPage = userRepository.findByConditions(
                 StringUtils.hasText(userName) ? userName : null,
@@ -173,6 +180,7 @@ public class UserService {
      * 查询所有正常用户（用于导出）
      * @return 用户列表
      */
+    @DataPermission(value = DataScope.DEPT_AND_CHILD, tableAlias = "u", columnName = "dept_id")
     public List<UserDTO> findAllForExport() {
         List<User> users = userRepository.findByDelFlagOrderByCreateTimeDesc(0);
         return UserDTOConverter.toDTOList(users);

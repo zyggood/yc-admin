@@ -3,6 +3,9 @@ package com.yc.admin.system.dept.service;
 import com.yc.admin.common.exception.BusinessException;
 import com.yc.admin.system.dept.entity.Dept;
 import com.yc.admin.system.dept.repository.DeptRepository;
+import com.yc.admin.system.permission.annotation.DataPermission;
+import com.yc.admin.system.permission.enums.DataScope;
+import com.yc.admin.system.permission.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,15 +28,18 @@ import java.util.stream.Collectors;
 public class DeptService {
 
     private final DeptRepository deptRepository;
+    private final DataPermissionService dataPermissionService;
 
+    @DataPermission(tableAlias = "d", columnName = "id")
     public List<Dept> selectDeptTree() {
         List<Dept> deptList = deptRepository.findByDelFlagOrderByOrderNumAsc(0);
-        return buildDeptTree(deptList);
+        return buildDeptTree(filterDeptsByPermission(deptList));
     }
 
+    @DataPermission(tableAlias = "d", columnName = "id")
     public List<Dept> selectDeptTreeNormal() {
         List<Dept> deptList = deptRepository.findByDelFlagAndStatusOrderByOrderNumAsc(0, 0);
-        return buildDeptTree(deptList);
+        return buildDeptTree(filterDeptsByPermission(deptList));
     }
 
     public Dept selectDeptById(Long deptId) {
@@ -156,9 +162,17 @@ public class DeptService {
     }
 
     public boolean checkDeptDataScope(Long deptId) {
-        // TODO: 实现数据权限校验逻辑
-        // 这里需要根据当前用户的数据权限来判断是否有权限操作该部门
-        return true;
+        Long currentUserId = dataPermissionService.getCurrentUserId();
+        if (currentUserId == null) {
+            return false;
+        }
+        
+        // 超级管理员有所有权限
+        if (dataPermissionService.isSuperAdmin(currentUserId)) {
+            return true;
+        }
+        
+        return dataPermissionService.hasAccessToDept(currentUserId, deptId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -179,15 +193,18 @@ public class DeptService {
     }
 
     public List<Dept> selectDeptTreeByRoleId(Long roleId) {
-        // TODO: 根据角色ID查询部门树
-        // 这里需要根据角色权限来过滤部门
-        return selectDeptTreeNormal();
+        List<Dept> deptList = deptRepository.findByDelFlagAndStatusOrderByOrderNumAsc(0, 0);
+        return buildDeptTree(filterDeptsByPermission(deptList));
     }
 
     public List<Dept> selectDeptTreeByUserId(Long userId) {
-        // TODO: 根据用户ID查询部门树
-        // 这里需要根据用户的数据权限来过滤部门
-        return selectDeptTreeNormal();
+        List<Dept> deptList = deptRepository.findByDelFlagAndStatusOrderByOrderNumAsc(0, 0);
+        // 根据指定用户ID过滤部门
+        List<Long> accessibleDeptIds = dataPermissionService.getAccessibleDeptIds(userId);
+        List<Dept> filteredDepts = deptList.stream()
+                .filter(dept -> accessibleDeptIds.contains(dept.getId()))
+                .collect(Collectors.toList());
+        return buildDeptTree(filteredDepts);
     }
 
     public List<Dept> buildDeptTree(List<Dept> depts) {
@@ -249,5 +266,31 @@ public class DeptService {
      */
     private boolean hasChild(List<Dept> list, Dept dept) {
         return getChildList(list, dept).size() > 0;
+    }
+    
+    /**
+     * 根据数据权限过滤部门列表
+     * 
+     * @param deptList 原始部门列表
+     * @return 过滤后的部门列表
+     */
+    private List<Dept> filterDeptsByPermission(List<Dept> deptList) {
+        Long currentUserId = dataPermissionService.getCurrentUserId();
+        if (currentUserId == null) {
+            return new ArrayList<>();
+        }
+        
+        // 超级管理员可以访问所有部门
+        if (dataPermissionService.isSuperAdmin(currentUserId)) {
+            return deptList;
+        }
+        
+        // 获取用户可访问的部门ID列表
+        List<Long> accessibleDeptIds = dataPermissionService.getAccessibleDeptIds(currentUserId);
+        
+        // 过滤部门列表
+        return deptList.stream()
+                .filter(dept -> accessibleDeptIds.contains(dept.getId()))
+                .collect(Collectors.toList());
     }
 }

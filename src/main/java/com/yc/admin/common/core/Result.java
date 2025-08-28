@@ -1,5 +1,6 @@
 package com.yc.admin.common.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -152,6 +153,7 @@ public class Result<T> implements Serializable {
      * 
      * @return 是否成功
      */
+    @JsonIgnore
     public boolean isSuccess() {
         return SUCCESS_CODE.equals(this.code);
     }
@@ -161,6 +163,7 @@ public class Result<T> implements Serializable {
      * 
      * @return 是否失败
      */
+    @JsonIgnore
     public boolean isError() {
         return !isSuccess();
     }

@@ -101,6 +101,18 @@ public class User extends BaseEntity {
     private String status = "0";
 
     /**
+     * 部门ID
+     */
+    @Column(name = "dept_id")
+    private Long deptId;
+
+    /**
+     * 用户类型（manager:管理者, leader:领导, user:普通用户）
+     */
+    @Column(name = "user_type", length = 20)
+    private String userType = "user";
+
+    /**
      * 备注
      */
     @Size(max = 500, message = "备注长度不能超过500个字符")
@@ -173,6 +185,14 @@ public class User extends BaseEntity {
      */
     public String getStatusDesc() {
         return "0".equals(this.status) ? "正常" : "停用";
+    }
+
+    /**
+     * 判断是否为管理员
+     * @return true：管理员，false：非管理员
+     */
+    public boolean isAdmin() {
+        return ADMIN_USER_ID.equals(this.getId()) || "admin".equals(this.userName);
     }
 
     /**
