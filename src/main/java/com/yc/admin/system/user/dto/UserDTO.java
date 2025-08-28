@@ -181,7 +181,6 @@ public class UserDTO {
     @Schema(description = "用户更新数据")
     public static class UpdateDTO {
 
-        @NotNull(message = "用户ID不能为空")
         @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED)
         private Long id;
 
