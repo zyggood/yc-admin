@@ -26,7 +26,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/menu")
+@RequestMapping("/menu")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "菜单管理", description = "菜单管理相关接口")

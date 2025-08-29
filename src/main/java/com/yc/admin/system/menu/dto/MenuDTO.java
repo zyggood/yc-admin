@@ -323,22 +323,6 @@ public class MenuDTO {
         private Integer status;
     }
 
-    /**
-     * 批量删除DTO
-     */
-    @Data
-    @Builder
-    @Schema(description = "批量删除请求")
-    public static class BatchDeleteDTO {
-
-        @NotEmpty(message = "菜单ID列表不能为空")
-        @Schema(description = "菜单ID列表", requiredMode = Schema.RequiredMode.REQUIRED)
-        private List<Long> ids;
-
-        @Schema(description = "是否强制删除（忽略子菜单检查）")
-        @Builder.Default
-        private Boolean force = false;
-    }
 
     // ==================== 树形结构DTO ====================
 

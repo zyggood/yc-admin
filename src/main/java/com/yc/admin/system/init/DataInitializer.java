@@ -2,12 +2,18 @@ package com.yc.admin.system.init;
 
 import com.yc.admin.system.role.dto.RoleDTO;
 import com.yc.admin.system.role.service.RoleService;
+import com.yc.admin.system.role.service.RoleMenuService;
 import com.yc.admin.system.user.dto.UserDTO;
 import com.yc.admin.system.user.service.UserService;
+import com.yc.admin.system.menu.service.MenuService;
+import com.yc.admin.system.menu.dto.MenuDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 数据初始化器
@@ -23,6 +29,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserService userService;
     private final RoleService roleService;
+    private final MenuService menuService;
+    private final RoleMenuService roleMenuService;
 
     @Override
     public void run(String... args) {
@@ -90,8 +98,18 @@ public class DataInitializer implements CommandLineRunner {
         String adminRoleKey = "admin";
         
         // 检查超级管理员角色是否已存在
-        if (roleService.findByRoleKey(adminRoleKey).isPresent()) {
-            log.info("超级管理员角色已存在，跳过初始化");
+        var existingAdminRole = roleService.findByRoleKey(adminRoleKey);
+        if (existingAdminRole.isPresent()) {
+            log.info("超级管理员角色已存在，检查菜单权限分配");
+            // 检查是否已分配菜单权限，如果没有则分配所有菜单权限
+            Long adminRoleId = existingAdminRole.get().getId();
+            List<Long> assignedMenuIds = roleMenuService.getMenuIdsByRoleId(adminRoleId);
+            if (assignedMenuIds.isEmpty()) {
+                log.info("超级管理员角色未分配菜单权限，开始分配所有菜单权限");
+                assignAllMenusToAdminRole(adminRoleId);
+            } else {
+                log.info("超级管理员角色已分配 {} 个菜单权限", assignedMenuIds.size());
+            }
             return;
         }
         
@@ -110,6 +128,9 @@ public class DataInitializer implements CommandLineRunner {
             
             RoleDTO createdRole = roleService.createRole(adminRole);
             log.info("超级管理员角色创建成功: 角色名={}, ID={}", createdRole.getRoleName(), createdRole.getId());
+            
+            // 为超级管理员角色分配所有菜单权限
+            assignAllMenusToAdminRole(createdRole.getId());
             
         } catch (Exception e) {
             log.error("创建超级管理员角色失败", e);
@@ -147,6 +168,34 @@ public class DataInitializer implements CommandLineRunner {
             
         } catch (Exception e) {
             log.error("创建普通用户角色失败", e);
+            // 不抛出异常，避免影响应用启动
+        }
+    }
+
+    /**
+     * 为超级管理员角色分配所有菜单权限
+     * @param adminRoleId 超级管理员角色ID
+     */
+    private void assignAllMenusToAdminRole(Long adminRoleId) {
+        try {
+            // 获取所有菜单
+            List<MenuDTO> allMenus = menuService.findAll();
+            if (allMenus.isEmpty()) {
+                log.info("当前系统中没有菜单，跳过权限分配");
+                return;
+            }
+            
+            // 提取所有菜单ID
+            List<Long> allMenuIds = allMenus.stream()
+                    .map(MenuDTO::getId)
+                    .collect(Collectors.toList());
+            
+            // 为超级管理员角色分配所有菜单权限
+            roleMenuService.assignMenusToRole(adminRoleId, allMenuIds);
+            log.info("为超级管理员角色分配所有菜单权限成功，共分配 {} 个菜单权限", allMenuIds.size());
+            
+        } catch (Exception e) {
+            log.error("为超级管理员角色分配菜单权限失败", e);
             // 不抛出异常，避免影响应用启动
         }
     }

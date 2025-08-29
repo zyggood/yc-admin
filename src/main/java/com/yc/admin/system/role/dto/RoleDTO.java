@@ -284,20 +284,6 @@ public class RoleDTO {
         private String status;
     }
 
-    /**
-     * 批量删除DTO
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Schema(description = "批量删除数据")
-    public static class BatchDeleteDTO {
-
-        @NotEmpty(message = "角色ID列表不能为空")
-        @Schema(description = "角色ID列表", requiredMode = Schema.RequiredMode.REQUIRED)
-        private List<Long> roleIds;
-    }
 
     // ==================== 用户角色关联DTO ====================
 
