@@ -176,4 +176,107 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
            "INNER JOIN UserRole ur ON r.id = ur.roleId " +
            "WHERE ur.userId = :userId AND r.status = '0' AND r.delFlag = 0")
     List<Role> findByUserId(@Param("userId") Long userId);
+
+    // ==================== 角色层级相关查询方法 ====================
+
+    /**
+     * 根据父角色ID查询子角色列表
+     * @param parentId 父角色ID
+     * @param delFlag 删除标志
+     * @return 子角色列表
+     */
+    List<Role> findByParentIdAndDelFlag(Long parentId, Integer delFlag);
+
+    /**
+     * 查询所有根角色（没有父角色的角色）
+     * @param delFlag 删除标志
+     * @return 根角色列表
+     */
+    List<Role> findByParentIdIsNullAndDelFlag(Integer delFlag);
+
+    /**
+     * 递归查询指定角色的所有子角色
+     * @param parentId 父角色ID
+     * @param delFlag 删除标志
+     * @return 所有子角色列表（包括子角色的子角色）
+     */
+    @Query(value = "WITH RECURSIVE role_hierarchy AS (" +
+                   "  SELECT id, role_name, role_key, parent_id, role_sort, status, del_flag " +
+                   "  FROM sys_role " +
+                   "  WHERE parent_id = :parentId AND del_flag = :delFlag " +
+                   "  UNION ALL " +
+                   "  SELECT r.id, r.role_name, r.role_key, r.parent_id, r.role_sort, r.status, r.del_flag " +
+                   "  FROM sys_role r " +
+                   "  INNER JOIN role_hierarchy rh ON r.parent_id = rh.id " +
+                   "  WHERE r.del_flag = :delFlag" +
+                   ") " +
+                   "SELECT * FROM role_hierarchy ORDER BY role_sort ASC", nativeQuery = true)
+    List<Role> findAllChildRoles(@Param("parentId") Long parentId, @Param("delFlag") Integer delFlag);
+
+    /**
+     * 递归查询指定角色的所有祖先角色
+     * @param roleId 角色ID
+     * @param delFlag 删除标志
+     * @return 祖先角色列表（从直接父角色到根角色）
+     */
+    @Query(value = "WITH RECURSIVE role_ancestors AS (" +
+                   "  SELECT p.id, p.role_name, p.role_key, p.parent_id, p.role_sort, p.status, p.del_flag " +
+                   "  FROM sys_role r " +
+                   "  INNER JOIN sys_role p ON r.parent_id = p.id " +
+                   "  WHERE r.id = :roleId AND r.del_flag = :delFlag AND p.del_flag = :delFlag " +
+                   "  UNION ALL " +
+                   "  SELECT p.id, p.role_name, p.role_key, p.parent_id, p.role_sort, p.status, p.del_flag " +
+                   "  FROM sys_role p " +
+                   "  INNER JOIN role_ancestors ra ON p.id = ra.parent_id " +
+                   "  WHERE p.del_flag = :delFlag" +
+                   ") " +
+                   "SELECT * FROM role_ancestors ORDER BY role_sort ASC", nativeQuery = true)
+    List<Role> findAncestorRoles(@Param("roleId") Long roleId, @Param("delFlag") Integer delFlag);
+
+    /**
+     * 检查角色是否存在循环引用
+     * @param roleId 角色ID
+     * @param parentId 要设置的父角色ID
+     * @param delFlag 删除标志
+     * @return 是否存在循环引用
+     */
+    @Query(value = "WITH RECURSIVE role_check AS (" +
+                   "  SELECT id, parent_id " +
+                   "  FROM sys_role " +
+                   "  WHERE id = :parentId AND del_flag = :delFlag " +
+                   "  UNION ALL " +
+                   "  SELECT r.id, r.parent_id " +
+                   "  FROM sys_role r " +
+                   "  INNER JOIN role_check rc ON r.parent_id = rc.id " +
+                   "  WHERE r.del_flag = :delFlag" +
+                   ") " +
+                   "SELECT COUNT(*) > 0 FROM role_check WHERE id = :roleId", nativeQuery = true)
+    boolean wouldCreateCycle(@Param("roleId") Long roleId, @Param("parentId") Long parentId, @Param("delFlag") Integer delFlag);
+
+    /**
+     * 统计指定角色的子角色数量
+     * @param parentId 父角色ID
+     * @param delFlag 删除标志
+     * @return 子角色数量
+     */
+    long countByParentIdAndDelFlag(Long parentId, Integer delFlag);
+
+    /**
+     * 查询指定层级深度的角色
+     * @param depth 层级深度（0为根角色）
+     * @param delFlag 删除标志
+     * @return 指定层级的角色列表
+     */
+    @Query(value = "WITH RECURSIVE role_depth AS (" +
+                   "  SELECT id, role_name, role_key, parent_id, role_sort, status, del_flag, 0 as depth " +
+                   "  FROM sys_role " +
+                   "  WHERE parent_id IS NULL AND del_flag = :delFlag " +
+                   "  UNION ALL " +
+                   "  SELECT r.id, r.role_name, r.role_key, r.parent_id, r.role_sort, r.status, r.del_flag, rd.depth + 1 " +
+                   "  FROM sys_role r " +
+                   "  INNER JOIN role_depth rd ON r.parent_id = rd.id " +
+                   "  WHERE r.del_flag = :delFlag" +
+                   ") " +
+                   "SELECT * FROM role_depth WHERE depth = :depth ORDER BY role_sort ASC", nativeQuery = true)
+    List<Role> findByDepth(@Param("depth") Integer depth, @Param("delFlag") Integer delFlag);
 }

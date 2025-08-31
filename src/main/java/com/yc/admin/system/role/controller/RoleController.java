@@ -242,4 +242,141 @@ public class RoleController {
             return Result.error("查询失败: " + e.getMessage());
         }
     }
+
+    // ==================== 角色层级相关接口 ====================
+
+    /**
+     * 查询角色层级树
+     * @return 角色层级树
+     */
+    @GetMapping("/hierarchy/tree")
+    public Result<List<RoleDTO>> getRoleHierarchyTree() {
+        try {
+            List<RoleDTO> tree = roleService.buildRoleHierarchyTree();
+            return Result.success("查询成功", tree);
+        } catch (Exception e) {
+            log.error("查询角色层级树失败", e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询所有根角色
+     * @return 根角色列表
+     */
+    @GetMapping("/hierarchy/roots")
+    public Result<List<RoleDTO>> getRootRoles() {
+        try {
+            List<RoleDTO> rootRoles = roleService.findRootRoles();
+            return Result.success("查询成功", rootRoles);
+        } catch (Exception e) {
+            log.error("查询根角色失败", e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询指定角色的子角色
+     * @param parentId 父角色ID
+     * @return 子角色列表
+     */
+    @GetMapping("/hierarchy/{parentId}/children")
+    public Result<List<RoleDTO>> getChildRoles(@PathVariable Long parentId) {
+        try {
+            List<RoleDTO> childRoles = roleService.findChildRoles(parentId);
+            return Result.success("查询成功", childRoles);
+        } catch (Exception e) {
+            log.error("查询子角色失败, parentId: {}", parentId, e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询指定角色的所有子角色（递归）
+     * @param parentId 父角色ID
+     * @return 所有子角色列表
+     */
+    @GetMapping("/hierarchy/{parentId}/all-children")
+    public Result<List<RoleDTO>> getAllChildRoles(@PathVariable Long parentId) {
+        try {
+            List<RoleDTO> allChildRoles = roleService.findAllChildRoles(parentId);
+            return Result.success("查询成功", allChildRoles);
+        } catch (Exception e) {
+            log.error("查询所有子角色失败, parentId: {}", parentId, e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询指定角色的父角色
+     * @param roleId 角色ID
+     * @return 父角色信息
+     */
+    @GetMapping("/hierarchy/{roleId}/parent")
+    public Result<RoleDTO> getParentRole(@PathVariable Long roleId) {
+        try {
+            return roleService.findParentRole(roleId)
+                    .map(parent -> Result.success("查询成功", parent))
+                    .orElse(Result.success("该角色没有父角色", null));
+        } catch (Exception e) {
+            log.error("查询父角色失败, roleId: {}", roleId, e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询指定角色的所有祖先角色
+     * @param roleId 角色ID
+     * @return 祖先角色列表
+     */
+    @GetMapping("/hierarchy/{roleId}/ancestors")
+    public Result<List<RoleDTO>> getAncestorRoles(@PathVariable Long roleId) {
+        try {
+            List<RoleDTO> ancestorRoles = roleService.findAncestorRoles(roleId);
+            return Result.success("查询成功", ancestorRoles);
+        } catch (Exception e) {
+            log.error("查询祖先角色失败, roleId: {}", roleId, e);
+            return Result.error("查询失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 设置角色的父角色
+     * @param roleId 角色ID
+     * @param parentId 父角色ID（可为null表示设为根角色）
+     * @return 操作结果
+     */
+    @PutMapping("/hierarchy/{roleId}/parent")
+    public Result<Void> setParentRole(@PathVariable Long roleId, @RequestParam(required = false) Long parentId) {
+        try {
+            roleService.setParentRole(roleId, parentId);
+            String message = parentId != null ? 
+                    String.format("角色层级关系设置成功: 角色ID=%d, 父角色ID=%d", roleId, parentId) :
+                    String.format("角色设置为根角色成功: 角色ID=%d", roleId);
+            return Result.success(message);
+        } catch (Exception e) {
+            log.error("设置角色层级关系失败, roleId: {}, parentId: {}", roleId, parentId, e);
+            return Result.error("设置失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查设置父角色是否会形成循环引用
+     * @param roleId 角色ID
+     * @param parentId 要设置的父角色ID
+     * @return 检查结果
+     */
+    @GetMapping("/hierarchy/{roleId}/check-cycle")
+    public Result<Map<String, Object>> checkCycle(@PathVariable Long roleId, @RequestParam Long parentId) {
+        try {
+            boolean wouldCreateCycle = roleService.wouldCreateCycle(roleId, parentId);
+            Map<String, Object> result = new HashMap<>();
+            result.put("wouldCreateCycle", wouldCreateCycle);
+            result.put("message", wouldCreateCycle ? "设置此父角色会形成循环引用" : "可以安全设置此父角色");
+            return Result.success("检查完成", result);
+        } catch (Exception e) {
+            log.error("检查循环引用失败, roleId: {}, parentId: {}", roleId, parentId, e);
+            return Result.error("检查失败: " + e.getMessage());
+        }
+    }
 }

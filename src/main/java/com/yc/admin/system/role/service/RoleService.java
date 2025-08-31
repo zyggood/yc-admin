@@ -409,4 +409,170 @@ public class RoleService {
             throw new BusinessException("备注长度不能超过500个字符");
         }
     }
+
+    // ==================== 角色层级相关方法 ====================
+
+    /**
+     * 查找指定角色的所有子角色
+     * @param parentId 父角色ID
+     * @return 子角色列表
+     */
+    public List<RoleDTO> findChildRoles(Long parentId) {
+        if (parentId == null) {
+            return List.of();
+        }
+        List<Role> childRoles = roleRepository.findByParentIdAndDelFlag(parentId, 0);
+        return RoleDTOConverter.toDTOList(childRoles);
+    }
+
+    /**
+     * 查找指定角色的所有子角色（递归）
+     * @param parentId 父角色ID
+     * @return 所有子角色列表（包括子角色的子角色）
+     */
+    public List<RoleDTO> findAllChildRoles(Long parentId) {
+        if (parentId == null) {
+            return List.of();
+        }
+        return roleRepository.findAllChildRoles(parentId, 0)
+                .stream()
+                .map(RoleDTOConverter::toDTO)
+                .toList();
+    }
+
+    /**
+     * 查找所有根角色（没有父角色的角色）
+     * @return 根角色列表
+     */
+    public List<RoleDTO> findRootRoles() {
+        List<Role> rootRoles = roleRepository.findByParentIdIsNullAndDelFlag(0);
+        return RoleDTOConverter.toDTOList(rootRoles);
+    }
+
+    /**
+     * 查找指定角色的父角色
+     * @param roleId 角色ID
+     * @return 父角色信息
+     */
+    public Optional<RoleDTO> findParentRole(Long roleId) {
+        if (roleId == null) {
+            return Optional.empty();
+        }
+        return roleRepository.findById(roleId)
+                .filter(role -> role.getDelFlag() == 0)
+                .filter(Role::hasParent)
+                .flatMap(role -> roleRepository.findById(role.getParentId()))
+                .filter(parent -> parent.getDelFlag() == 0)
+                .map(RoleDTOConverter::toDTO);
+    }
+
+    /**
+     * 查找指定角色的所有祖先角色（向上递归）
+     * @param roleId 角色ID
+     * @return 祖先角色列表（从直接父角色到根角色）
+     */
+    public List<RoleDTO> findAncestorRoles(Long roleId) {
+        if (roleId == null) {
+            return List.of();
+        }
+        return roleRepository.findAncestorRoles(roleId, 0)
+                .stream()
+                .map(RoleDTOConverter::toDTO)
+                .toList();
+    }
+
+    /**
+     * 构建角色层级树
+     * @return 角色层级树
+     */
+    public List<RoleDTO> buildRoleHierarchyTree() {
+        List<Role> allRoles = roleRepository.findByDelFlagOrderByRoleSortAsc(0);
+        return buildRoleTree(allRoles, null);
+    }
+
+    /**
+     * 递归构建角色树
+     * @param allRoles 所有角色
+     * @param parentId 父角色ID
+     * @return 角色树节点列表
+     */
+    private List<RoleDTO> buildRoleTree(List<Role> allRoles, Long parentId) {
+        return allRoles.stream()
+                .filter(role -> {
+                    if (parentId == null) {
+                        return role.getParentId() == null;
+                    } else {
+                        return parentId.equals(role.getParentId());
+                    }
+                })
+                .map(role -> {
+                    RoleDTO roleDTO = RoleDTOConverter.toDTO(role);
+                    // 递归设置子角色
+                    List<RoleDTO> children = buildRoleTree(allRoles, role.getId());
+                    // 这里需要在RoleDTO中添加children字段，暂时注释
+                    // roleDTO.setChildren(children);
+                    return roleDTO;
+                })
+                .toList();
+    }
+
+    /**
+     * 检查角色层级关系是否会形成循环
+     * @param roleId 角色ID
+     * @param parentId 要设置的父角色ID
+     * @return true：会形成循环，false：不会形成循环
+     */
+    public boolean wouldCreateCycle(Long roleId, Long parentId) {
+        if (roleId == null) {
+            return true;
+        }
+        
+        // 如果parentId为null，表示设为根角色，不会形成循环
+        if (parentId == null) {
+            return false;
+        }
+        
+        // 如果roleId和parentId相同，会形成自循环
+        if (roleId.equals(parentId)) {
+            return true;
+        }
+        
+        // 检查parentId是否是roleId的子孙角色
+        List<Role> descendants = roleRepository.findAllChildRoles(roleId, 0);
+        return descendants.stream().anyMatch(role -> parentId.equals(role.getId()));
+    }
+
+    /**
+     * 设置角色的父角色
+     * @param roleId 角色ID
+     * @param parentId 父角色ID
+     */
+    @Transactional
+    public void setParentRole(Long roleId, Long parentId) {
+        if (roleId == null) {
+            throw new BusinessException("角色ID不能为空");
+        }
+        
+        Role role = roleRepository.findById(roleId)
+                .filter(r -> r.getDelFlag() == 0)
+                .orElseThrow(() -> new BusinessException("角色不存在: " + roleId));
+        
+        // 检查是否会形成循环
+        if (wouldCreateCycle(roleId, parentId)) {
+            throw new BusinessException("设置父角色会形成循环引用");
+        }
+        
+        // 如果设置了父角色，检查父角色是否存在
+        if (parentId != null) {
+            roleRepository.findById(parentId)
+                    .filter(r -> r.getDelFlag() == 0)
+                    .orElseThrow(() -> new BusinessException("父角色不存在: " + parentId));
+        }
+        
+        role.setParentId(parentId);
+        role.setUpdateTime(LocalDateTime.now());
+        roleRepository.save(role);
+        
+        log.info("角色层级关系设置成功: 角色ID={}, 父角色ID={}", roleId, parentId);
+    }
 }

@@ -27,7 +27,9 @@ import java.util.Objects;
     @Index(name = "idx_role_key", columnList = "roleKey", unique = true),
     @Index(name = "idx_role_sort", columnList = "roleSort"),
     @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_status_del_flag", columnList = "status,delFlag")
+    @Index(name = "idx_status_del_flag", columnList = "status,delFlag"),
+    @Index(name = "idx_parent_id", columnList = "parentId"),
+    @Index(name = "idx_parent_inheritance", columnList = "parentId,enableInheritance")
 })
 @AttributeOverride(name = "id", column = @Column(name = "role_id"))
 public class Role extends BaseEntity {
@@ -88,6 +90,20 @@ public class Role extends BaseEntity {
     @Size(max = 500, message = "备注长度不能超过500个字符")
     @Column(name = "remark", length = 500)
     private String remark;
+
+    /**
+     * 父角色ID
+     * 用于构建角色层级关系，支持权限继承
+     */
+    @Column(name = "parent_id")
+    private Long parentId;
+
+    /**
+     * 是否启用权限继承（0：不启用 1：启用）
+     * 启用权限继承的角色可以继承父级权限，提供更灵活的权限管理
+     */
+    @Column(name = "enable_inheritance", length = 1)
+    private String enableInheritance = InheritanceStatus.DISABLED;
 
     // ==================== 业务方法 ====================
 
@@ -152,6 +168,80 @@ public class Role extends BaseEntity {
         return "admin".equals(this.roleKey);
     }
 
+    /**
+     * 判断是否启用权限继承
+     * @return true：启用，false：不启用
+     */
+    public boolean isInheritanceEnabled() {
+        return InheritanceStatus.ENABLED.equals(this.enableInheritance);
+    }
+
+    /**
+     * 启用权限继承
+     */
+    public void enableInheritance() {
+        this.enableInheritance = InheritanceStatus.ENABLED;
+    }
+
+    /**
+     * 禁用权限继承
+     */
+    public void disableInheritance() {
+        this.enableInheritance = InheritanceStatus.DISABLED;
+    }
+
+    /**
+     * 判断是否为根角色（没有父角色）
+     * @return true：根角色，false：子角色
+     */
+    public boolean isRootRole() {
+        return this.parentId == null;
+    }
+
+    /**
+     * 判断是否有父角色
+     * @return true：有父角色，false：没有父角色
+     */
+    public boolean hasParent() {
+        return this.parentId != null;
+    }
+
+    /**
+     * 设置父角色
+     * @param parentRole 父角色
+     */
+    public void setParent(Role parentRole) {
+        this.parentId = parentRole != null ? parentRole.getId() : null;
+    }
+
+    /**
+     * 清除父角色关系
+     */
+    public void clearParent() {
+        this.parentId = null;
+    }
+
+    /**
+     * 判断是否为指定角色的子角色
+     * @param roleId 角色ID
+     * @return true：是子角色，false：不是子角色
+     */
+    public boolean isChildOf(Long roleId) {
+        return roleId != null && roleId.equals(this.parentId);
+    }
+
+    /**
+     * 获取角色层级描述
+     * @return 层级描述
+     */
+    public String getHierarchyDesc() {
+        if (isRootRole()) {
+            return "根角色";
+        } else {
+            return "子角色 (父角色ID: " + parentId + ")";
+        }
+    }
+
     // ==================== 常量定义 ====================
 
     /**
@@ -163,7 +253,7 @@ public class Role extends BaseEntity {
     }
 
     /**
-     * 数据权限范围枚举
+     * 数据权限范围常量
      */
     public static class DataScope {
         public static final String ALL = "1";           // 全部数据权限
@@ -171,6 +261,14 @@ public class Role extends BaseEntity {
         public static final String DEPT = "3";         // 本部门数据权限
         public static final String DEPT_AND_CHILD = "4"; // 本部门及以下数据权限
         public static final String SELF = "5";         // 仅本人数据权限
+    }
+
+    /**
+     * 权限继承状态常量
+     */
+    public static class InheritanceStatus {
+        public static final String ENABLED = "1";   // 启用权限继承
+        public static final String DISABLED = "0";  // 不启用权限继承
     }
 
     @Override
