@@ -1,0 +1,51 @@
+# 权限继承配置示例
+# 将此配置添加到 application.yml 中
+
+yc:
+  admin:
+    permission:
+      inheritance:
+        # 是否启用权限继承功能
+        enabled: true
+        
+        # 默认继承策略
+        # ADDITIVE: 累加策略，子权限继承父权限并可以添加新权限
+        # OVERRIDE: 覆盖策略，子权限完全覆盖父权限
+        # INTERSECTION: 交集策略，只保留父子权限的交集
+        default-strategy: ADDITIVE
+        
+        # 默认合并策略
+        # UNION: 并集，合并所有权限
+        # INTERSECTION: 交集，只保留共同权限
+        # DIFFERENCE: 差集，移除重复权限
+        default-merge-strategy: UNION
+        
+        # 超级管理员是否自动获得所有权限
+        admin-auto-inherit-all: true
+        
+        # 权限缓存时间（秒）
+        cache-timeout-seconds: 300
+
+# 权限继承最佳实践说明：
+#
+# 1. 角色层次设计建议：
+#    - 超级管理员(super_admin): 拥有所有权限，通过权限继承自动获得
+#    - 系统管理员(admin): 拥有系统管理相关权限
+#    - 部门管理员(dept_admin): 拥有部门内用户和数据管理权限
+#    - 普通用户(user): 拥有基础业务操作权限
+#
+# 2. 权限继承策略选择：
+#    - ADDITIVE: 适用于大多数场景，允许角色在继承基础上扩展权限
+#    - OVERRIDE: 适用于需要严格控制权限范围的场景
+#    - INTERSECTION: 适用于需要限制权限范围的安全敏感场景
+#
+# 3. 安全考虑：
+#    - 定期审计权限分配
+#    - 实施最小权限原则
+#    - 敏感操作需要额外验证
+#    - 记录权限变更日志
+#
+# 4. 性能优化：
+#    - 合理设置缓存时间
+#    - 避免过深的权限继承层次
+#    - 定期清理无效权限

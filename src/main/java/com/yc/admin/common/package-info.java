@@ -11,6 +11,7 @@
  * - service: 内部服务（不对外暴露）
  */
 @org.springframework.modulith.ApplicationModule(
+        displayName = "公共模块",
         type = ApplicationModule.Type.OPEN
 )
 package com.yc.admin.common;

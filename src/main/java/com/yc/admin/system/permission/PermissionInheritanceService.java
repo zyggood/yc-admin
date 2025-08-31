@@ -4,6 +4,7 @@ import com.yc.admin.system.menu.entity.Menu;
 import com.yc.admin.system.menu.repository.MenuRepository;
 import com.yc.admin.system.role.entity.Role;
 import com.yc.admin.system.role.repository.RoleRepository;
+import com.yc.admin.system.role.repository.RoleDeptRepository;
 import com.yc.admin.system.user.entity.User;
 import com.yc.admin.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class PermissionInheritanceService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final RoleDeptRepository roleDeptRepository;
     private final MenuRepository menuRepository;
     private final PermissionService permissionService;
 
@@ -69,6 +71,41 @@ public class PermissionInheritanceService {
         BUTTON_ONLY,
         /** 数据权限 */
         DATA_ONLY
+    }
+
+    /**
+     * 数据权限范围
+     */
+    public enum DataScope {
+        /** 全部数据权限 */
+        ALL("1"),
+        /** 自定数据权限 */
+        CUSTOM("2"),
+        /** 本部门数据权限 */
+        DEPT("3"),
+        /** 本部门及以下数据权限 */
+        DEPT_AND_CHILD("4"),
+        /** 仅本人数据权限 */
+        SELF("5");
+
+        private final String value;
+
+        DataScope(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public static DataScope fromValue(String value) {
+            for (DataScope scope : values()) {
+                if (scope.value.equals(value)) {
+                    return scope;
+                }
+            }
+            return DEPT; // 默认返回部门权限
+        }
     }
 
     /**
@@ -140,14 +177,44 @@ public class PermissionInheritanceService {
         }
 
         Role role = roleOpt.get();
-        log.debug("计算角色权限: roleId={}, roleName={}", roleId, role.getRoleName());
+        log.debug("计算角色权限: roleId={}, roleName={}, dataScope={}", roleId, role.getRoleName(), role.getDataScope());
 
         // 获取角色的菜单权限
         List<Menu> roleMenus = getRoleMenus(roleId);
         PermissionSet rolePermissions = PermissionSet.fromMenus(roleMenus);
         
+        // 添加角色的数据权限
+        Set<DataScope> dataScopes = new HashSet<>();
+        Set<Long> deptIds = new HashSet<>();
+        
+        if (role.getDataScope() != null) {
+            DataScope dataScope = DataScope.fromValue(role.getDataScope());
+            if (dataScope != null) {
+                dataScopes.add(dataScope);
+                
+                // 如果是自定义数据权限，需要获取关联的部门ID
+                if (dataScope == DataScope.CUSTOM) {
+                    try {
+                        List<Long> roleDeptIds = roleDeptRepository.findDeptIdsByRoleId(roleId);
+                        deptIds.addAll(roleDeptIds);
+                        log.debug("角色{}的自定义数据权限包含部门: {}", roleId, roleDeptIds);
+                    } catch (Exception e) {
+                        log.warn("获取角色{}的自定义数据权限部门失败: {}", roleId, e.getMessage());
+                    }
+                }
+            }
+        }
+        
+        // 创建包含数据权限的权限集合
+        PermissionSet rolePermissionsWithData = new PermissionSet(
+            rolePermissions.getMenuIds(),
+            rolePermissions.getPermissions(),
+            dataScopes,
+            deptIds
+        );
+        
         // 应用权限继承
-        PermissionSet inheritedPermissions = applyPermissionInheritance(rolePermissions, InheritanceStrategy.ADDITIVE);
+        PermissionSet inheritedPermissions = applyPermissionInheritance(rolePermissionsWithData, InheritanceStrategy.ADDITIVE);
         
         log.debug("角色权限计算完成: roleId={}, permissions={}", roleId, inheritedPermissions);
         return inheritedPermissions;
@@ -428,6 +495,8 @@ public class PermissionInheritanceService {
     private PermissionSet mergeTwo(PermissionSet set1, PermissionSet set2, MergeStrategy strategy) {
         Set<Long> menuIds = new HashSet<>();
         Set<String> permissions = new HashSet<>();
+        Set<DataScope> dataScopes = new HashSet<>();
+        Set<Long> deptIds = new HashSet<>();
 
         switch (strategy) {
             case UNION:
@@ -436,6 +505,10 @@ public class PermissionInheritanceService {
                 menuIds.addAll(set2.getMenuIds());
                 permissions.addAll(set1.getPermissions());
                 permissions.addAll(set2.getPermissions());
+                dataScopes.addAll(set1.getDataScopes());
+                dataScopes.addAll(set2.getDataScopes());
+                deptIds.addAll(set1.getDeptIds());
+                deptIds.addAll(set2.getDeptIds());
                 break;
             case INTERSECTION:
                 // 交集合并
@@ -443,6 +516,10 @@ public class PermissionInheritanceService {
                 menuIds.retainAll(set2.getMenuIds());
                 permissions.addAll(set1.getPermissions());
                 permissions.retainAll(set2.getPermissions());
+                dataScopes.addAll(set1.getDataScopes());
+                dataScopes.retainAll(set2.getDataScopes());
+                deptIds.addAll(set1.getDeptIds());
+                deptIds.retainAll(set2.getDeptIds());
                 break;
             case DIFFERENCE:
                 // 差集合并（set1 - set2）
@@ -450,10 +527,14 @@ public class PermissionInheritanceService {
                 menuIds.removeAll(set2.getMenuIds());
                 permissions.addAll(set1.getPermissions());
                 permissions.removeAll(set2.getPermissions());
+                dataScopes.addAll(set1.getDataScopes());
+                dataScopes.removeAll(set2.getDataScopes());
+                deptIds.addAll(set1.getDeptIds());
+                deptIds.removeAll(set2.getDeptIds());
                 break;
         }
 
-        return new PermissionSet(menuIds, permissions);
+        return new PermissionSet(menuIds, permissions, dataScopes, deptIds);
     }
 
     /**
@@ -462,14 +543,22 @@ public class PermissionInheritanceService {
     public static class PermissionSet {
         private final Set<Long> menuIds;
         private final Set<String> permissions;
+        private final Set<DataScope> dataScopes;
+        private final Set<Long> deptIds; // 自定义数据权限的部门ID
 
         public PermissionSet(Set<Long> menuIds, Set<String> permissions) {
+            this(menuIds, permissions, new HashSet<>(), new HashSet<>());
+        }
+
+        public PermissionSet(Set<Long> menuIds, Set<String> permissions, Set<DataScope> dataScopes, Set<Long> deptIds) {
             this.menuIds = menuIds != null ? new HashSet<>(menuIds) : new HashSet<>();
             this.permissions = permissions != null ? new HashSet<>(permissions) : new HashSet<>();
+            this.dataScopes = dataScopes != null ? new HashSet<>(dataScopes) : new HashSet<>();
+            this.deptIds = deptIds != null ? new HashSet<>(deptIds) : new HashSet<>();
         }
 
         public static PermissionSet empty() {
-            return new PermissionSet(Collections.emptySet(), Collections.emptySet());
+            return new PermissionSet(Collections.emptySet(), Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
         }
 
         public static PermissionSet fromMenus(List<Menu> menus) {
@@ -497,8 +586,16 @@ public class PermissionInheritanceService {
             return new HashSet<>(permissions);
         }
 
+        public Set<DataScope> getDataScopes() {
+            return new HashSet<>(dataScopes);
+        }
+
+        public Set<Long> getDeptIds() {
+            return new HashSet<>(deptIds);
+        }
+
         public boolean isEmpty() {
-            return menuIds.isEmpty() && permissions.isEmpty();
+            return menuIds.isEmpty() && permissions.isEmpty() && dataScopes.isEmpty() && deptIds.isEmpty();
         }
 
         public boolean hasMenuId(Long menuId) {
@@ -509,11 +606,21 @@ public class PermissionInheritanceService {
             return permissions.contains(permission);
         }
 
+        public boolean hasDataScope(DataScope dataScope) {
+            return dataScopes.contains(dataScope);
+        }
+
+        public boolean hasDeptId(Long deptId) {
+            return deptIds.contains(deptId);
+        }
+
         @Override
         public String toString() {
             return "PermissionSet{" +
                     "menuIds=" + menuIds +
                     ", permissions=" + permissions +
+                    ", dataScopes=" + dataScopes +
+                    ", deptIds=" + deptIds +
                     '}';
         }
     }
