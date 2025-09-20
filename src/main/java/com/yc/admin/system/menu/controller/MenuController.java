@@ -7,7 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -208,7 +209,7 @@ public class MenuController {
      */
     @PostMapping
     @Operation(summary = "创建菜单", description = "创建新的菜单")
-    @PreAuthorize("hasAuthority('system:menu:add')")
+    //@PreAuthorize("hasAuthority('system:menu:add')")
     public Result<MenuDTO> createMenu(
             @Parameter(description = "菜单信息", required = true)
             @RequestBody @Valid MenuDTO.CreateDTO menu) {

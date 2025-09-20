@@ -1,8 +1,8 @@
 package com.yc.admin.system.permission;
 
-import com.yc.admin.system.user.repository.UserRoleRepository;
-import com.yc.admin.system.role.repository.RoleRepository;
 import com.yc.admin.system.menu.repository.MenuRepository;
+import com.yc.admin.system.role.repository.RoleRepository;
+import com.yc.admin.system.user.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -119,6 +119,14 @@ public class PermissionService {
         if (userId == null) {
             return List.of();
         }
+
+        if (userId == 1) {
+            return menuRepository.findAll().stream()
+                    .map(menu -> menu.getPerms())
+                    .filter(perms -> perms != null && !perms.trim().isEmpty())
+                    .toList();
+        }
+
         return menuRepository.findByUserId(userId).stream()
                 .map(menu -> menu.getPerms())
                 .filter(perms -> perms != null && !perms.trim().isEmpty())

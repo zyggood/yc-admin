@@ -6,7 +6,6 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -175,7 +174,7 @@ public class MenuDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Schema(description = "菜单创建请求")
+    @Schema(name = "MenuCreateDTO", description = "菜单创建请求")
     public static class CreateDTO {
 
         @NotBlank(message = "菜单名称不能为空")
